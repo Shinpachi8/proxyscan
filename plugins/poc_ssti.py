@@ -10,6 +10,7 @@ import urlparse
 import time
 import copy
 from config import *
+from lib.common import *
 
 
 
@@ -36,110 +37,165 @@ def verify(task):
 
     # the payload and anchor, for now only got one
     anchor = "57183746103"
+    url = task['url']
+    method = task['method']
+    headers = task['headers']
+    data = task['requesst_data'] if method == 'POST' else None
 
-    # generate payloads
-    urlQueue = Queue.Queue()
 
-    url = task["url"]
-    u = urlparse.urlparse(url)
-    # if query, split it to dict, and directly replace orignal value
-    # maybe only use replace????? 
-    if task["method"] == "GET":
-        if u.query:
-            try:
-                query_dict = dict(urlparse.parse_qsl(u.query))              
-                for keys in query_dict:
-                    tmp_query = ""
-                    for payload in ssti_payload:
-                        for in_keys in query_dict:
-                            if in_keys == keys:
-                                tmp_query += in_keys + "=" +  query_dict[in_keys] + payload
-                            else:
-                                tmp_query += in_keys + "=" + query_dict[in_keys]
-                            tmp_query += "&"
-                        tmp_query = tmp_query[:-1] # remove last &
-                        tmp_url = u.scheme + "://" + u.netloc + u.path + "?" + tmp_query
-                        _ = copy.deepcopy(task)
-                        _["url"] = tmp_url
-                        urlQueue.put(_)
-                        del _
-            except Exception as e:
-                logger.info("[-] [Error] [SSTI] [splitUrl] " + repr(e))
-        # path = /aa/bb/cc.html -> [/{{}}/bb/cc.html, /aa/{{}}/cc.html, ], ignore /aa-bb/cc-dd for now
-        if u.path:
-            path_list = u.path.split("/")
-            for path in path_list:
-                if path and "." not in path: # ignore usless path and last type path, i.e.  ignore "", "xxx.html"
-                    for payload in ssti_payload:
-                        tmp_path = u.path.replace(path, payload)
-                        
-                        tmp_url = u.scheme + "://" + u.netloc + tmp_path + "?" + u.query
-                        _ = copy.deepcopy(task)
-                        _["url"] = tmp_url
-                        urlQueue.put(_)
-                        del _
-
-    elif task["method"] == "POST":
-        # ingore json format
-        post_content = task["request_content"]
-        if "{" in post_content and ":" in post_content and "=" not in post_content:
-            pass
-        elif "multipart/form-data" in task["request_header"]["Content-Type"]:
-            pass
+    hj = THTTPJOB(url, method=method, headers=headers, data=data)
+    url_parse = urlparse.urlparse(url)
+    # XSS里如果没有query字段，就在最后追加
+    if url_parse.query == "" and method == 'GET':
+        pass
+        # for key in XSS_Rule.keys():
+        #     for payload in XSS_Rule[key]:
+        #         _ = copy.deepcopy(task)
+        #         tmp_url = url + payload
+        #         _["url"] = tmp_url
+        #         _["anchor"] = payload
+        #         urlQueue.put(_)
+        #         del _
+    else:
+        isjson = False
+        if method == 'GET':
+            query_string = hj.url.get_query
         else:
-            try:
-                post_dict = dict(urlparse.parse_qsl(post_content))
-                # direct replace is not correct,  if a=1%b=12 ,the result maybe a={}&b={}2
-                for keys in post_dict:
-                    tmp_post = ""
-                    for payload in ssti_payload:
-                        for in_keys in post_dict:
-                            if in_keys == keys:
-                                tmp_post += in_keys + "=" + post_dict[in_keys] + payload
-                            else:
-                                tmp_post += in_keys + "=" + post_dict[in_keys]
-                            tmp_post += "&"
-                        tmp_post = tmp_post[:-1]
-                        _ = copy.deepcopy(task)
-                        _["request_content"] = tmp_post
-                        urlQueue.put(_)
-                        del _
-            except Exception as e:
-                logger.error("[-] [ERROR] [SSTI] [splitUrl] " + repr(e)) 
+            if is_json_data(data):
+                jsjson = True
+                query_string = urllib.urlencode(json.loads(data))
+            else:
+                query_string = data
+        
+        found = False
+        query_dict_list = Pollution(query_string, ssti_payload, isjson=jsjson).payload_generate()
+        for query_dict in query_dict_list:
+            if found:
+                break
+            if method == 'GET':
+                hj.url.get_dict_query = query_dict
+            else:
+                if isjson:
+                    hj.data = json.dumps(query_dict)
+                else:
+                    hj.data = urllib.urlencode(query_dict)
 
-
-    #verify
-    found = False
-    while not urlQueue.empty():
-        item = urlQueue.get()
-        print item["url"]
-        try:
-            logger.info("[+] [Info] [SSTI] [verify] Parseing:\t" + item["url"] + "###" + item["request_content"] )
-            if item["method"] == "POST":
-                ret = requests.post(item["url"], item["request_content"], headers=item["request_header"], timeout=10, verify=False, allow_redirects=False)
-                if anchor in ret.content:
-                    message["url"] = item["url"]
-                    message["method"] = "POST"
-                    message["param"] = item["request_content"]
-                    found = True
-                    break
-
-            elif item["method"] == "GET":
-                ret = requests.get(item["url"], headers=item["request_header"], timeout=10, verify=False, allow_redirects=False)
-                if anchor in ret.content:
-                    message["url"] = item["url"]
-                    message["method"] = "GET"
-                    found = True
-                    break
-        except Exception as e:
-            logger.error("[-] [Error] [SSTI] [verify] " + repr(e))
-    while not urlQueue.empty():
-        urlQueue.get()
-    
+            status_code, headers, html, time_used = hj.request()
+            if status_code == 200 and html.find(anchor) >= 0:
+                found = True
+                message['url'] = hj.response.url
+                message['method'] = hj.method
+                message['param'] = hj.data if hj.method == 'GET' else hj.url.get_query
+                break
     if found:
+        save_to_databases(message)
         return (True, message)
     else:
         return (False, {})
+
+    # generate payloads
+    # urlQueue = Queue.Queue()
+
+    # url = task["url"]
+    # u = urlparse.urlparse(url)
+    # # if query, split it to dict, and directly replace orignal value
+    # # maybe only use replace????? 
+    # if task["method"] == "GET":
+    #     if u.query:
+    #         try:
+    #             query_dict = dict(urlparse.parse_qsl(u.query))              
+    #             for keys in query_dict:
+    #                 tmp_query = ""
+    #                 for payload in ssti_payload:
+    #                     for in_keys in query_dict:
+    #                         if in_keys == keys:
+    #                             tmp_query += in_keys + "=" +  query_dict[in_keys] + payload
+    #                         else:
+    #                             tmp_query += in_keys + "=" + query_dict[in_keys]
+    #                         tmp_query += "&"
+    #                     tmp_query = tmp_query[:-1] # remove last &
+    #                     tmp_url = u.scheme + "://" + u.netloc + u.path + "?" + tmp_query
+    #                     _ = copy.deepcopy(task)
+    #                     _["url"] = tmp_url
+    #                     urlQueue.put(_)
+    #                     del _
+    #         except Exception as e:
+    #             logger.info("[-] [Error] [SSTI] [splitUrl] " + repr(e))
+    #     # path = /aa/bb/cc.html -> [/{{}}/bb/cc.html, /aa/{{}}/cc.html, ], ignore /aa-bb/cc-dd for now
+    #     if u.path:
+    #         path_list = u.path.split("/")
+    #         for path in path_list:
+    #             if path and "." not in path: # ignore usless path and last type path, i.e.  ignore "", "xxx.html"
+    #                 for payload in ssti_payload:
+    #                     tmp_path = u.path.replace(path, payload)
+                        
+    #                     tmp_url = u.scheme + "://" + u.netloc + tmp_path + "?" + u.query
+    #                     _ = copy.deepcopy(task)
+    #                     _["url"] = tmp_url
+    #                     urlQueue.put(_)
+    #                     del _
+
+    # elif task["method"] == "POST":
+    #     # ingore json format
+    #     post_content = task["request_content"]
+    #     if "{" in post_content and ":" in post_content and "=" not in post_content:
+    #         pass
+    #     elif "multipart/form-data" in task["request_header"]["Content-Type"]:
+    #         pass
+    #     else:
+    #         try:
+    #             post_dict = dict(urlparse.parse_qsl(post_content))
+    #             # direct replace is not correct,  if a=1%b=12 ,the result maybe a={}&b={}2
+    #             for keys in post_dict:
+    #                 tmp_post = ""
+    #                 for payload in ssti_payload:
+    #                     for in_keys in post_dict:
+    #                         if in_keys == keys:
+    #                             tmp_post += in_keys + "=" + post_dict[in_keys] + payload
+    #                         else:
+    #                             tmp_post += in_keys + "=" + post_dict[in_keys]
+    #                         tmp_post += "&"
+    #                     tmp_post = tmp_post[:-1]
+    #                     _ = copy.deepcopy(task)
+    #                     _["request_content"] = tmp_post
+    #                     urlQueue.put(_)
+    #                     del _
+    #         except Exception as e:
+    #             logger.error("[-] [ERROR] [SSTI] [splitUrl] " + repr(e)) 
+
+
+    # #verify
+    # found = False
+    # while not urlQueue.empty():
+    #     item = urlQueue.get()
+    #     print item["url"]
+    #     try:
+    #         logger.info("[+] [Info] [SSTI] [verify] Parseing:\t" + item["url"] + "###" + item["request_content"] )
+    #         if item["method"] == "POST":
+    #             ret = requests.post(item["url"], item["request_content"], headers=item["request_header"], timeout=10, verify=False, allow_redirects=False)
+    #             if anchor in ret.content:
+    #                 message["url"] = item["url"]
+    #                 message["method"] = "POST"
+    #                 message["param"] = item["request_content"]
+    #                 found = True
+    #                 break
+
+    #         elif item["method"] == "GET":
+    #             ret = requests.get(item["url"], headers=item["request_header"], timeout=10, verify=False, allow_redirects=False)
+    #             if anchor in ret.content:
+    #                 message["url"] = item["url"]
+    #                 message["method"] = "GET"
+    #                 found = True
+    #                 break
+    #     except Exception as e:
+    #         logger.error("[-] [Error] [SSTI] [verify] " + repr(e))
+    # while not urlQueue.empty():
+    #     urlQueue.get()
+    
+    # if found:
+    #     return (True, message)
+    # else:
+    #     return (False, {})
 
 
                     

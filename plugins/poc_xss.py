@@ -7,8 +7,10 @@ import requests
 import copy
 import urlparse
 import urllib
+import json
 import Queue
 from config import *
+from lib.common import *
 
 
 requests.packages.urllib3.disable_warnings()
@@ -24,8 +26,8 @@ def verify(task):
                     }
     :rtype: (True, message), if found ,return (True, message), else, return (False, {})
     """
-    if task["method"] != "GET":
-        return (False, {})
+    # if task["method"] != "GET":
+    #     return (False, {})
     message = {
         "method": "",
         "url" : "",
@@ -35,77 +37,126 @@ def verify(task):
         }
     
     # define urlqueue
-    urlQueue = Queue.Queue()
+    # urlQueue = Queue.Queue()
 
     # generate payload
     url = task["url"]
+    headers = task['headers']
+    method = task['method']
+    data = task['request_content'] if method == 'POST' else None
+
+    hj = THTTPJOB(url, method=method, headers=headers, data=data)
     url_parse = urlparse.urlparse(url)
     # XSS里如果没有query字段，就在最后追加
-    if url_parse.query == "":
-        for key in XSS_Rule.keys():
-            for payload in XSS_Rule[key]:
-                _ = copy.deepcopy(task)
-                tmp_url = url + payload
-                _["url"] = tmp_url
-                _["anchor"] = payload
-                urlQueue.put(_)
-                del _
+    if url_parse.query == "" and method == 'GET':
+        pass
+        # for key in XSS_Rule.keys():
+        #     for payload in XSS_Rule[key]:
+        #         _ = copy.deepcopy(task)
+        #         tmp_url = url + payload
+        #         _["url"] = tmp_url
+        #         _["anchor"] = payload
+        #         urlQueue.put(_)
+        #         del _
     else:
-        query_dict = dict(urlparse.parse_qsl(url_parse.query))
-        for query_key in query_dict.keys():
-            # 每一个参数分别生成包含xss payload的task
-            for payload_key in XSS_Rule.keys():
-                for payload in XSS_Rule[payload_key]:
-                    # 这里选择的是在后边追加
-                    tmp_query = ""
-                    for in_key in query_dict.keys():
-                        if in_key == query_key:
-                            tmp_query += in_key + "=" + query_dict[in_key] + payload
-                        else:
-                            tmp_query += in_key + "=" + query_dict[in_key]
-                        tmp_query += "&"
-                    tmp_query = tmp_query[:-1]
-                    # 生成临时task变量
-                    _ = copy.deepcopy(task)
-                    _["anchor"] = payload
-                    _["url"] = url_parse.scheme + "://" + url_parse.netloc + url_parse.path + "?" + tmp_query
-                    urlQueue.put(_)
-                    del _
+        isjson = False
+        if method == 'GET':
+            query_string = hj.url.get_query
+        else:
+            if is_json_data(data):
+                jsjson = True
+                query_string = urllib.urlencode(json.loads(data))
+            else:
+                query_string = data
+        
+        found = False
+        for rule_key in XSS_Rule:
+            if found:
+                break
+            
+            query_dict_list = Pollution(query_string, XSS_Rule[rule_key], isjson=jsjson).payload_generate()
+            for query_dict in query_dict_list:
+                if found:
+                    break
+                if method == 'GET':
+                    hj.url.get_dict_query = query_dict
+                else:
+                    if isjson:
+                        hj.data = json.dumps(query_dict)
+                    else:
+                        hj.data = urllib.urlencode(query_dict)
+
+                status_code, headers, html, time_used = hj.request()
+                if status_code == 200 and headers.get('Content-Type', '').split(';')[0] not in ["application/json", "text/plain", "application/javascript", "text/json", "text/javascript", "application/x-javascript"]:
+                    for rules in XSS_Rule[rule_key]:
+                        if html.find(rules) >= 0:
+                            found = True
+                            message['url'] = hj.response.url
+                            message['method'] = hj.method
+                            message['param'] = hj.data if hj.method == 'GET' else hj.url.get_query
+                            break
+        if found:
+            save_to_databases(message)
+            return (True, message)
+        else:
+            return (False, {})
+        
+
+        # query_dict = dict(urlparse.parse_qsl(url_parse.query))
+        # for query_key in query_dict.keys():
+        #     # 每一个参数分别生成包含xss payload的task
+        #     for payload_key in XSS_Rule.keys():
+        #         for payload in XSS_Rule[payload_key]:
+        #             # 这里选择的是在后边追加
+        #             tmp_query = ""
+        #             for in_key in query_dict.keys():
+        #                 if in_key == query_key:
+        #                     tmp_query += in_key + "=" + query_dict[in_key] + payload
+        #                 else:
+        #                     tmp_query += in_key + "=" + query_dict[in_key]
+        #                 tmp_query += "&"
+        #             tmp_query = tmp_query[:-1]
+        #             # 生成临时task变量
+        #             _ = copy.deepcopy(task)
+        #             _["anchor"] = payload
+        #             _["url"] = url_parse.scheme + "://" + url_parse.netloc + url_parse.path + "?" + tmp_query
+        #             urlQueue.put(_)
+        #             del _
     
     # verify if the xss exists
-    found = False
-    while not urlQueue.empty():
-        item = urlQueue.get()
+    # found = False
+    # while not urlQueue.empty():
+    #     item = urlQueue.get()
 
         
-        url = item["url"]
-        headers = item["request_header"]
-        try:
-            #logging.info("[+] [XSS_Forcelery] [FuzzXSS] [verify] Request:\t" + url)
-            req = requests.get(url, headers=headers, verify=False, allow_redirects=True, timeout=10)
-            # 判断是否为json/javascript格式
-            if ("Content-Type" in req.headers) and (req.headers["Content-Type"].split(";")[0]  in ["application/json", "text/plain", "application/javascript", "text/json", "text/javascript", "application/x-javascript"]):
-                pass
-            else:
-                response = "".join(req.content.split("\n"))
-                if item["anchor"] in response:
-                    message["method"] = "GET"
-                    message["url"] = url
-                    message["param"] = item["anchor"]
-                    found = True
-                    break
-        except Exception as e:
-            # logging.error("[-] [XSS_Forcelery] [FuzzXSS] [verify] " + repr(e))
-            logger.error(repr(e))
+    #     url = item["url"]
+    #     headers = item["request_header"]
+    #     try:
+    #         #logging.info("[+] [XSS_Forcelery] [FuzzXSS] [verify] Request:\t" + url)
+    #         req = requests.get(url, headers=headers, verify=False, allow_redirects=True, timeout=10)
+    #         # 判断是否为json/javascript格式
+    #         if ("Content-Type" in req.headers) and (req.headers["Content-Type"].split(";")[0]  in ["application/json", "text/plain", "application/javascript", "text/json", "text/javascript", "application/x-javascript"]):
+    #             pass
+    #         else:
+    #             response = "".join(req.content.split("\n"))
+    #             if item["anchor"] in response:
+    #                 message["method"] = "GET"
+    #                 message["url"] = url
+    #                 message["param"] = item["anchor"]
+    #                 found = True
+    #                 break
+    #     except Exception as e:
+    #         # logging.error("[-] [XSS_Forcelery] [FuzzXSS] [verify] " + repr(e))
+    #         logger.error(repr(e))
     
-    while not urlQueue.empty():
-        urlQueue.get()
+    # while not urlQueue.empty():
+    #     urlQueue.get()
     
-    if found:
-        save_to_databases(message)
-        return (True, message)
-    else:
-        return (False, {})
+    # if found:
+    #     save_to_databases(message)
+    #     return (True, message)
+    # else:
+    #     return (False, {})
 
 
 

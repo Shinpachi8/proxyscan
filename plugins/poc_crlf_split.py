@@ -8,7 +8,7 @@ import urllib
 import Queue
 import re
 from config import *
-
+from lib.common import *
 
 """
 CR\LF HTTP Split
@@ -39,76 +39,134 @@ def verify(task):
         "info" : "[CRLF Http Split]",
     }
 
-    # anchor
-    anchor = ""
-    urlQueue = Queue.Queue()
-    # generate payload
-
     url = task["url"]
+    headers = task['headers']
+    method = task['method']
+    data = task['request_content'] if method == 'POST' else None
+
+    hj = THTTPJOB(url, method=method, headers=headers, data=data)
     url_parse = urlparse.urlparse(url)
-
-    if url_parse.query == "":
-        for key in CRLF_Rule.keys():
-            for payload in CRLF_Rule[key]:
-                _ = copy.deepcopy(task)
-                tmp_url = url + payload
-                _["url"] = tmp_url
-                urlQueue.put(_)
-                del _
+    # XSS里如果没有query字段，就在最后追加
+    if url_parse.query == "" and method == 'GET':
+        pass
+        # for key in XSS_Rule.keys():
+        #     for payload in XSS_Rule[key]:
+        #         _ = copy.deepcopy(task)
+        #         tmp_url = url + payload
+        #         _["url"] = tmp_url
+        #         _["anchor"] = payload
+        #         urlQueue.put(_)
+        #         del _
     else:
-        query_dict = dict(urlparse.parse_qsl(url_parse.query))
-        for query_key in query_dict.keys():
-            # 每一个参数分别生成包含LFI payload的task
-            for payload_key in CRLF_Rule.keys():
-                for payload in CRLF_Rule[payload_key]:
-                    # lfi时选择直接替换参数值
-                    tmp_query = ""
-                    for in_key in query_dict.keys():
-                        if in_key == query_key:
-                            tmp_query += in_key + "=" +  query_dict[in_key] + payload
-                        else:
-                            tmp_query += in_key + "=" + query_dict[in_key]
-                        tmp_query += "&"
-                    tmp_query = tmp_query[:-1]
-                    # 生成临时task变量
-                    _ = copy.deepcopy(task)
-                    _["url"] = url_parse.scheme + "://" + url_parse.netloc + url_parse.path + "?" + tmp_query
-                    urlQueue.put(_)
-                    del _
-
-    # detect the vulnerability
-    found = False
-    while not urlQueue.empty():
-        item = urlQueue.get()
-        url = item["url"]
-        headers = item["request_header"]
-        try:
-            logger.info("[FuzzCRLF][verify]: {}".format(url))
-            if item["method"] == "GET":
-                req = requests.get(url, headers=headers, verify=False, allow_redirects=True, timeout=10)
-            # else:
-            #     req = requests.post(url, data=item["request_content"],
-            #         headers=headers, allow_redirects=True)
-            #response = "".join(req.content.split("\n"))
-            if "crlftest" in req.headers:
-            # if re.findall(anchor, response):
-                message["method"] = item["method"]
-                message["url"] = url
-                message["param"] = url
-                found = True
+        isjson = False
+        if method == 'GET':
+            query_string = hj.url.get_query
+        else:
+            if is_json_data(data):
+                jsjson = True
+                query_string = urllib.urlencode(json.loads(data))
+            else:
+                query_string = data
+        
+        found = False
+        for rule_key in LFI_Rule:
+            if found:
                 break
-        except Exception as e:
-            logger.error(repr(e))
+            
+            query_dict_list = Pollution(query_string, LFI_Rule[rule_key], isjson=jsjson).payload_generate()
+            for query_dict in query_dict_list:
+                if found:
+                    break
+                if method == 'GET':
+                    hj.url.get_dict_query = query_dict
+                else:
+                    if isjson:
+                        hj.data = json.dumps(query_dict)
+                    else:
+                        hj.data = urllib.urlencode(query_dict)
 
-    # clear the Queue
-    while not urlQueue.empty():
-        urlQueue.get()
+                status_code, headers, html, time_used = hj.request()
+                if status_code == 200 and headers.get('crlftest', '') == 'crlftestvalue':
+                    found = True
+                    message['url'] = hj.response.url
+                    message['method'] = hj.method
+                    message['param'] = hj.data if hj.method == 'GET' else hj.url.get_query
+                    break
+        if found:
+            save_to_databases(message)
+            return (True, message)
+        else:
+            return (False, {})
+    # anchor
+    # anchor = ""
+    # urlQueue = Queue.Queue()
+    # # generate payload
 
-    if found:
-        save_to_databases(message)
-        return (True, message)
-    else:
-        return (False, {})
+    # url = task["url"]
+    # url_parse = urlparse.urlparse(url)
+
+    # if url_parse.query == "":
+    #     for key in CRLF_Rule.keys():
+    #         for payload in CRLF_Rule[key]:
+    #             _ = copy.deepcopy(task)
+    #             tmp_url = url + payload
+    #             _["url"] = tmp_url
+    #             urlQueue.put(_)
+    #             del _
+    # else:
+    #     query_dict = dict(urlparse.parse_qsl(url_parse.query))
+    #     for query_key in query_dict.keys():
+    #         # 每一个参数分别生成包含LFI payload的task
+    #         for payload_key in CRLF_Rule.keys():
+    #             for payload in CRLF_Rule[payload_key]:
+    #                 # lfi时选择直接替换参数值
+    #                 tmp_query = ""
+    #                 for in_key in query_dict.keys():
+    #                     if in_key == query_key:
+    #                         tmp_query += in_key + "=" +  query_dict[in_key] + payload
+    #                     else:
+    #                         tmp_query += in_key + "=" + query_dict[in_key]
+    #                     tmp_query += "&"
+    #                 tmp_query = tmp_query[:-1]
+    #                 # 生成临时task变量
+    #                 _ = copy.deepcopy(task)
+    #                 _["url"] = url_parse.scheme + "://" + url_parse.netloc + url_parse.path + "?" + tmp_query
+    #                 urlQueue.put(_)
+    #                 del _
+
+    # # detect the vulnerability
+    # found = False
+    # while not urlQueue.empty():
+    #     item = urlQueue.get()
+    #     url = item["url"]
+    #     headers = item["request_header"]
+    #     try:
+    #         logger.info("[FuzzCRLF][verify]: {}".format(url))
+    #         if item["method"] == "GET":
+    #             req = requests.get(url, headers=headers, verify=False, allow_redirects=True, timeout=10)
+    #         # else:
+    #         #     req = requests.post(url, data=item["request_content"],
+    #         #         headers=headers, allow_redirects=True)
+    #         #response = "".join(req.content.split("\n"))
+    #         if "crlftest" in req.headers:
+    #         # if re.findall(anchor, response):
+    #             message["method"] = item["method"]
+    #             message["url"] = url
+    #             message["param"] = url
+    #             found = True
+    #             break
+    #     except Exception as e:
+    #         logger.error(repr(e))
+
+    # # clear the Queue
+    # while not urlQueue.empty():
+    #     urlQueue.get()
+
+    # if found:
+    #     save_to_databases(message)
+    #     return (True, message)
+    # else:
+    #     return (False, {})
 
 
 if __name__ == '__main__':

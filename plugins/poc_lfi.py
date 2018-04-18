@@ -7,6 +7,7 @@ import urlparse
 import urllib
 import Queue
 from config import *
+from lib.common import *
 
 """
 本地文件包含脚本
@@ -40,110 +41,166 @@ def verify(task):
     }
 
     # define urlQueue
-    urlQueue = Queue.Queue()
-    anchor = "root:x:"
+    anchor = "root:x:0"
+    url = task["url"]
+    headers = task['headers']
+    method = task['method']
+    data = task['request_content'] if method == 'POST' else None
 
+    hj = THTTPJOB(url, method=method, headers=headers, data=data)
+    url_parse = urlparse.urlparse(url)
+    # XSS里如果没有query字段，就在最后追加
+    if url_parse.query == "" and method == 'GET':
+        pass
+        # for key in XSS_Rule.keys():
+        #     for payload in XSS_Rule[key]:
+        #         _ = copy.deepcopy(task)
+        #         tmp_url = url + payload
+        #         _["url"] = tmp_url
+        #         _["anchor"] = payload
+        #         urlQueue.put(_)
+        #         del _
+    else:
+        isjson = False
+        if method == 'GET':
+            query_string = hj.url.get_query
+        else:
+            if is_json_data(data):
+                jsjson = True
+                query_string = urllib.urlencode(json.loads(data))
+            else:
+                query_string = data
+        
+        found = False
+        for rule_key in CRLF_Rule:
+            if found:
+                break
+            
+            query_dict_list = Pollution(query_string, CRLF_Rule[rule_key], isjson=jsjson).payload_generate()
+            for query_dict in query_dict_list:
+                if found:
+                    break
+                if method == 'GET':
+                    hj.url.get_dict_query = query_dict
+                else:
+                    if isjson:
+                        hj.data = json.dumps(query_dict)
+                    else:
+                        hj.data = urllib.urlencode(query_dict)
+
+                status_code, headers, html, time_used = hj.request()
+                if status_code == 200 and html.find(anchor) >= 0:
+                    found = True
+                    message['url'] = hj.response.url
+                    message['method'] = hj.method
+                    message['param'] = hj.data if hj.method == 'GET' else hj.url.get_query
+                    break
+        if found:
+            save_to_databases(message)
+            return (True, message)
+        else:
+            return (False, {})
     # generate payload
 
-    url = task["url"]
-    print "[poc_lfi] [task.url= {}]".format(url)
-    url_parse = urlparse.urlparse(url)
-    if task["method"] == "GET":
-        # XSS里如果没有query字段，就在最后追加
-        if url_parse.query == "":
-            for key in LFI_Rule.keys():
-                for payload in LFI_Rule[key]:
-                    _ = copy.deepcopy(task)
-                    tmp_url = url[0:url.rindex("/")+1] + payload
-                    _["url"] = tmp_url
-                    _["anchor"] = anchor
-                    urlQueue.put(_)
-                    del _
-        else:
-            query_dict = dict(urlparse.parse_qsl(url_parse.query))
-            for query_key in query_dict.keys():
-                # 每一个参数分别生成包含LFI payload的task
-                for payload_key in LFI_Rule.keys():
-                    for payload in LFI_Rule[payload_key]:
-                        # lfi时选择直接替换参数值
-                        tmp_query = ""
-                        for in_key in query_dict.keys():
-                            if in_key == query_key:
-                                tmp_query += in_key + "=" +  payload
-                            else:
-                                tmp_query += in_key + "=" + query_dict[in_key]
-                            tmp_query += "&"
-                        tmp_query = tmp_query[:-1]
-                        # 生成临时task变量
-                        _ = copy.deepcopy(task)
-                        _["anchor"] = anchor
-                        _["url"] = url_parse.scheme + "://" + url_parse.netloc + url_parse.path + "?" + tmp_query
-                        urlQueue.put(_)
-                        del _
-    elif task["method"] == "POST":
-        query = task["request_content"]
-        if "{" in query and ":" in query and "}" in query:
-            # how to judge if the payload is json?
-            pass
-        elif "multipart/form-data" in task["request_header"]["Content-Type"]:
-            # pass the file upload
-            pass
-        else:
-            try:
-                post_content = task["request_content"]
-                post_dict = dict(urlparse.parse_qsl(post_content))
-                # direct replace is not correct,  if a=1%b=12 ,the result maybe a={}&b={}2
-                for keys in post_dict:
-                    tmp_post = ""
-                    for payload_key in LFI_Rule.keys():
-                        for payload in LFI_Rule[payload_key]:
-                            for in_keys in post_dict:
-                                if in_keys == keys:
-                                    tmp_post += in_keys + "=" + payload
-                                else:
-                                    tmp_post += in_keys + "=" + post_dict[in_keys]
-                                tmp_post += "&"
-                            tmp_post = tmp_post[:-1]
-                            _ = copy.deepcopy(task)
-                            _["request_content"] = tmp_post
-                            _["anchor"] = anchor
-                            urlQueue.put(_)
-                            del _
-            except Exception as e:
-                logger.error(repr(e))
+    # url = task["url"]
+    # print "[poc_lfi] [task.url= {}]".format(url)
+    # url_parse = urlparse.urlparse(url)
+    # if task["method"] == "GET":
+    #     # XSS里如果没有query字段，就在最后追加
+    #     if url_parse.query == "":
+    #         for key in LFI_Rule.keys():
+    #             for payload in LFI_Rule[key]:
+    #                 _ = copy.deepcopy(task)
+    #                 tmp_url = url[0:url.rindex("/")+1] + payload
+    #                 _["url"] = tmp_url
+    #                 _["anchor"] = anchor
+    #                 urlQueue.put(_)
+    #                 del _
+    #     else:
+    #         query_dict = dict(urlparse.parse_qsl(url_parse.query))
+    #         for query_key in query_dict.keys():
+    #             # 每一个参数分别生成包含LFI payload的task
+    #             for payload_key in LFI_Rule.keys():
+    #                 for payload in LFI_Rule[payload_key]:
+    #                     # lfi时选择直接替换参数值
+    #                     tmp_query = ""
+    #                     for in_key in query_dict.keys():
+    #                         if in_key == query_key:
+    #                             tmp_query += in_key + "=" +  payload
+    #                         else:
+    #                             tmp_query += in_key + "=" + query_dict[in_key]
+    #                         tmp_query += "&"
+    #                     tmp_query = tmp_query[:-1]
+    #                     # 生成临时task变量
+    #                     _ = copy.deepcopy(task)
+    #                     _["anchor"] = anchor
+    #                     _["url"] = url_parse.scheme + "://" + url_parse.netloc + url_parse.path + "?" + tmp_query
+    #                     urlQueue.put(_)
+    #                     del _
+    # elif task["method"] == "POST":
+    #     query = task["request_content"]
+    #     if "{" in query and ":" in query and "}" in query:
+    #         # how to judge if the payload is json?
+    #         pass
+    #     elif "multipart/form-data" in task["request_header"]["Content-Type"]:
+    #         # pass the file upload
+    #         pass
+    #     else:
+    #         try:
+    #             post_content = task["request_content"]
+    #             post_dict = dict(urlparse.parse_qsl(post_content))
+    #             # direct replace is not correct,  if a=1%b=12 ,the result maybe a={}&b={}2
+    #             for keys in post_dict:
+    #                 tmp_post = ""
+    #                 for payload_key in LFI_Rule.keys():
+    #                     for payload in LFI_Rule[payload_key]:
+    #                         for in_keys in post_dict:
+    #                             if in_keys == keys:
+    #                                 tmp_post += in_keys + "=" + payload
+    #                             else:
+    #                                 tmp_post += in_keys + "=" + post_dict[in_keys]
+    #                             tmp_post += "&"
+    #                         tmp_post = tmp_post[:-1]
+    #                         _ = copy.deepcopy(task)
+    #                         _["request_content"] = tmp_post
+    #                         _["anchor"] = anchor
+    #                         urlQueue.put(_)
+    #                         del _
+    #         except Exception as e:
+    #             logger.error(repr(e))
 
 
-    # verify
-    found = False
-    while not urlQueue.empty():
-        item = urlQueue.get()
-        url = item["url"]
-        headers = item["request_header"]
-        try:
-            logging.info("[+] [LFI_Forcelery] [FuzzLFI] [verify] Request:\t" + url)
-            if item["method"] == "GET":
-                req = requests.get(url, headers=headers, verify=False, allow_redirects=True, timeout=10)
-            elif item["method"] == "POST":
-                req = requests.post(url, data=item["request_content"], headers=headers, verify=False, allow_redirects=True, timeout=10)
-            response = "".join(req.content.split("\n"))
-            if item["anchor"] in response and req.status_code == 200:
-                message["method"] = item["method"]
-                message["url"] = url
-                message["param"] = item["url"] if item["method"] == "GET" else item["request_content"]
-                found = True
-                break
-        except Exception as e:
-            logger.error(repr(e))
+    # # verify
+    # found = False
+    # while not urlQueue.empty():
+    #     item = urlQueue.get()
+    #     url = item["url"]
+    #     headers = item["request_header"]
+    #     try:
+    #         logging.info("[+] [LFI_Forcelery] [FuzzLFI] [verify] Request:\t" + url)
+    #         if item["method"] == "GET":
+    #             req = requests.get(url, headers=headers, verify=False, allow_redirects=True, timeout=10)
+    #         elif item["method"] == "POST":
+    #             req = requests.post(url, data=item["request_content"], headers=headers, verify=False, allow_redirects=True, timeout=10)
+    #         response = "".join(req.content.split("\n"))
+    #         if item["anchor"] in response and req.status_code == 200:
+    #             message["method"] = item["method"]
+    #             message["url"] = url
+    #             message["param"] = item["url"] if item["method"] == "GET" else item["request_content"]
+    #             found = True
+    #             break
+    #     except Exception as e:
+    #         logger.error(repr(e))
 
-    # clear the queue
-    while not urlQueue.empty():
-        urlQueue.get()
+    # # clear the queue
+    # while not urlQueue.empty():
+    #     urlQueue.get()
 
-    if found:
-        save_to_databases(message)
-        return (True, message)
-    else:
-        return (False, {})
+    # if found:
+    #     save_to_databases(message)
+    #     return (True, message)
+    # else:
+    #     return (False, {})
 
 
 
