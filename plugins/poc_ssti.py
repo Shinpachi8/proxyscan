@@ -39,13 +39,14 @@ def verify(task):
     anchor = "57183746103"
     url = task['url']
     method = task['method']
-    headers = task['headers']
-    data = task['requesst_data'] if method == 'POST' else None
+    headers = task['request_header']
+    data = task['request_content'] if method == 'POST' else None
 
 
     hj = THTTPJOB(url, method=method, headers=headers, data=data)
     url_parse = urlparse.urlparse(url)
     # XSS里如果没有query字段，就在最后追加
+    found = False
     if url_parse.query == "" and method == 'GET':
         pass
         # for key in XSS_Rule.keys():
@@ -62,13 +63,12 @@ def verify(task):
             query_string = hj.url.get_query
         else:
             if is_json_data(data):
-                jsjson = True
+                isjson = True
                 query_string = urllib.urlencode(json.loads(data))
             else:
                 query_string = data
-        
-        found = False
-        query_dict_list = Pollution(query_string, ssti_payload, isjson=jsjson).payload_generate()
+
+        query_dict_list = Pollution(query_string, ssti_payload, isjson=isjson).payload_generate()
         for query_dict in query_dict_list:
             if found:
                 break
@@ -99,11 +99,11 @@ def verify(task):
     # url = task["url"]
     # u = urlparse.urlparse(url)
     # # if query, split it to dict, and directly replace orignal value
-    # # maybe only use replace????? 
+    # # maybe only use replace?????
     # if task["method"] == "GET":
     #     if u.query:
     #         try:
-    #             query_dict = dict(urlparse.parse_qsl(u.query))              
+    #             query_dict = dict(urlparse.parse_qsl(u.query))
     #             for keys in query_dict:
     #                 tmp_query = ""
     #                 for payload in ssti_payload:
@@ -128,7 +128,7 @@ def verify(task):
     #             if path and "." not in path: # ignore usless path and last type path, i.e.  ignore "", "xxx.html"
     #                 for payload in ssti_payload:
     #                     tmp_path = u.path.replace(path, payload)
-                        
+
     #                     tmp_url = u.scheme + "://" + u.netloc + tmp_path + "?" + u.query
     #                     _ = copy.deepcopy(task)
     #                     _["url"] = tmp_url
@@ -161,7 +161,7 @@ def verify(task):
     #                     urlQueue.put(_)
     #                     del _
     #         except Exception as e:
-    #             logger.error("[-] [ERROR] [SSTI] [splitUrl] " + repr(e)) 
+    #             logger.error("[-] [ERROR] [SSTI] [splitUrl] " + repr(e))
 
 
     # #verify
@@ -191,14 +191,14 @@ def verify(task):
     #         logger.error("[-] [Error] [SSTI] [verify] " + repr(e))
     # while not urlQueue.empty():
     #     urlQueue.get()
-    
+
     # if found:
     #     return (True, message)
     # else:
     #     return (False, {})
 
 
-                    
+
 
 if __name__ == '__main__':
     item1={

@@ -15,7 +15,7 @@ def verify(task):
     """
     url = task["url"]
     method = task['method']
-    headers = task['headers']
+    headers = task['request_header']
     data = task['request_content'] if method == 'GET' else None
 
     _ = urlparse.urlparse(url)
@@ -39,7 +39,7 @@ def verify(task):
     for contenttype in ['application/xml', 'text/xml']:
         hj.headers['Content-Type'] = contenttype
         hj.request()
-    
+
     # if real_header_content_type:
     #     hj.headers['Content-Type'] = real_header_content_type
     # else:
@@ -54,7 +54,7 @@ def verify(task):
             query = urllib.urlencode(json.loads(hj.data))
         else:
             query = hj.data
-    
+
     xxe_dict = Pollution(query, xxe_list).payload_generate()
 
     for payload in xxe_dict:
@@ -66,7 +66,8 @@ def verify(task):
             else:
                 hj.data = urllib.urlencode(payload)
         hj.request()
-    
-            
+
+    return (False, {})
+
 
 

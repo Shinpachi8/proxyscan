@@ -35,13 +35,13 @@ def verify(task):
         "type" : "XSS",
         "info" : "[XSS]",
         }
-    
+
     # define urlqueue
     # urlQueue = Queue.Queue()
 
     # generate payload
     url = task["url"]
-    headers = task['headers']
+    headers = task['request_header']
     method = task['method']
     data = task['request_content'] if method == 'POST' else None
 
@@ -49,7 +49,8 @@ def verify(task):
     url_parse = urlparse.urlparse(url)
     # XSS里如果没有query字段，就在最后追加
     if url_parse.query == "" and method == 'GET':
-        pass
+        #pass
+        return (False, {})
         # for key in XSS_Rule.keys():
         #     for payload in XSS_Rule[key]:
         #         _ = copy.deepcopy(task)
@@ -64,17 +65,17 @@ def verify(task):
             query_string = hj.url.get_query
         else:
             if is_json_data(data):
-                jsjson = True
+                isjson = True
                 query_string = urllib.urlencode(json.loads(data))
             else:
                 query_string = data
-        
+
         found = False
         for rule_key in XSS_Rule:
             if found:
                 break
-            
-            query_dict_list = Pollution(query_string, XSS_Rule[rule_key], isjson=jsjson).payload_generate()
+
+            query_dict_list = Pollution(query_string, XSS_Rule[rule_key], isjson=isjson).payload_generate()
             for query_dict in query_dict_list:
                 if found:
                     break
@@ -100,7 +101,7 @@ def verify(task):
             return (True, message)
         else:
             return (False, {})
-        
+
 
         # query_dict = dict(urlparse.parse_qsl(url_parse.query))
         # for query_key in query_dict.keys():
@@ -122,13 +123,13 @@ def verify(task):
         #             _["url"] = url_parse.scheme + "://" + url_parse.netloc + url_parse.path + "?" + tmp_query
         #             urlQueue.put(_)
         #             del _
-    
+
     # verify if the xss exists
     # found = False
     # while not urlQueue.empty():
     #     item = urlQueue.get()
 
-        
+
     #     url = item["url"]
     #     headers = item["request_header"]
     #     try:
@@ -148,10 +149,10 @@ def verify(task):
     #     except Exception as e:
     #         # logging.error("[-] [XSS_Forcelery] [FuzzXSS] [verify] " + repr(e))
     #         logger.error(repr(e))
-    
+
     # while not urlQueue.empty():
     #     urlQueue.get()
-    
+
     # if found:
     #     save_to_databases(message)
     #     return (True, message)
@@ -174,7 +175,7 @@ if __name__ == '__main__':
     a.runFuzz()
 
 """
-# if not necessery, not use this rule, 
+# if not necessery, not use this rule,
 XSS_Rule = {
     "script":[
             "<script>alert('XSS');</script>",

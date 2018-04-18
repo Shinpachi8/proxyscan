@@ -41,19 +41,20 @@ def verify(task):
         "type" : "Unsafe Redirect",
         "info" : "[Unsafe Redirect]",
     }
-    
+
     # define urlqueue
     # urlQueue = Queue.Queue()
 
     # generate payload
     url = task["url"]
-    headers = task['headers']
+    headers = task['request_header']
     method = task['method']
     data = task['request_content'] if method == 'POST' else None
 
-    hj = THTTPJOB(url, method=method, headers=headers, data=data)
+    hj = THTTPJOB(url, method=method, headers=headers, data=data, allow_redirects=True)
     url_parse = urlparse.urlparse(url)
     # XSS里如果没有query字段，就在最后追加
+    found = False
     if url_parse.query == "" and method == 'GET':
         pass
         # for key in XSS_Rule.keys():
@@ -70,17 +71,16 @@ def verify(task):
             query_string = hj.url.get_query
         else:
             if is_json_data(data):
-                jsjson = True
+                isjson = True
                 query_string = urllib.urlencode(json.loads(data))
             else:
                 query_string = data
-        
-        found = False
+
         for rule_key in USR_Rule:
             if found:
                 break
-            
-            query_dict_list = Pollution(query_string, USR_Rule[rule_key], isjson=jsjson).payload_generate()
+
+            query_dict_list = Pollution(query_string, USR_Rule[rule_key], isjson=isjson).payload_generate()
             for query_dict in query_dict_list:
                 if found:
                     break
@@ -101,11 +101,11 @@ def verify(task):
                         message['method'] = hj.method
                         message['param'] = hj.data if hj.method == 'GET' else hj.url.get_query
                         break
-        if found:
-            save_to_databases(message)
-            return (True, message)
-        else:
-            return (False, {})
+    if found:
+        save_to_databases(message)
+        return (True, message)
+    else:
+        return (False, {})
     # anchor
     # anchor = "Valar Morghulis"
     # urlQueue = Queue.Queue()

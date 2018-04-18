@@ -33,7 +33,7 @@ def verify(task):
     # dns loc
     url = task['url']
     method =  task['method']
-    headers = task['headers']
+    headers = task['request_header']
     target  = base64.b64encode(url).replace('=', '')
     data = task['request_content'] if method == 'POST' else None
     hj = THTTPJOB(url, method=method, headers=headers, data=data)
@@ -58,7 +58,7 @@ def verify(task):
             isjson = True
         else:
             query = hj.data
-    
+
     # generate pollution
     payload_dict = Pollution(query, payload_list).payload_generate()
     for payload in payload_dict:
@@ -69,9 +69,9 @@ def verify(task):
                 hj.data = json.dumps(payload)
             else:
                 hj.data = urllib.urlencode(payload)
-        
+
         hj.request()
-    
+
     return (False, {})
 
 
@@ -79,7 +79,7 @@ def verify(task):
 
 
     # get target pre
-    
+
 
     # query = dict(urlparse.parse_qsl(url_parse.query))
     # # first makeup payload, and this is add,
