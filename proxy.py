@@ -20,7 +20,8 @@ from mitmproxy.proxy.server import ProxyServer
 from parser import ResponseParser
 from termcolor import cprint
 from mysql import MysqlInterface
-from tasks import scan
+# from tasks import scan
+from plugins.lib.common import *
 
 
 requests.packages.urllib3.disable_warnings()
@@ -37,6 +38,7 @@ class BlueProxy(flow.FlowMaster):
         self.STOP_ME = False
         self.start_time = time.time()
         self.url_count = 0
+        self.redis_conn = RedisUtil(RedisConf.db, RedisConf.host)
 
         #GET 重复&&相似度
         self.get_dupl  = [[], []]
@@ -60,7 +62,7 @@ class BlueProxy(flow.FlowMaster):
         #threading.Thread(target=self.save_cif_result).start()
 
         #插入URL到本地或远程任务队列中
-        threading.Thread(target=self.put_thread).start()
+        # threading.Thread(target=self.put_thread).start()
 
     def print_data(self):
         while not self.STOP_ME:
@@ -101,16 +103,16 @@ class BlueProxy(flow.FlowMaster):
                     self.url_count += 1
             except Exception, e:
                 time.sleep(1)
-                #print str(e)
+                print str(e)
                 continue
 
-    def put_thread(self):
-        while not self.STOP_ME:
-            try:
-                task = self.task_queue.get()
-                scan.delay(task)
-            except Exception as e:
-                print "[scan.delay] [error={}]".format(e)
+    # def put_thread(self):
+    #     while not self.STOP_ME:
+    #         try:
+    #             task = self.task_queue.get()
+    #             scan.delay(task)
+    #         except Exception as e:
+    #             print "[scan.delay] [error={}]".format(e)
 
     def md5(self, data):
         m = hashlib.md5()
@@ -314,6 +316,8 @@ class BlueProxy(flow.FlowMaster):
             parser = ResponseParser(msg).parser_data()
             if parser:
                 self.url_queue.put(parser)
+                data = json.dumps(parser)
+                self.redis_conn.task_push(RedisConf.taskqueue, data)
         except Exception, e:
             print e
 

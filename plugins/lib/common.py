@@ -12,11 +12,16 @@ import re
 import json
 import socket
 import time
+import redis
 import httplib
 import urllib
+import logging
 import requests
 requests.packages.urllib3.disable_warnings()
 
+logging.getLogger("requests").setLevel(logging.WARNING)
+logger = LoggerUtil()
+# logger.getLogger('request').setLevel()
 
 STATIC_EXT = ["f4v","bmp","bz2","css","doc","eot","flv","gif"]
 STATIC_EXT += ["gz","ico","jpeg","jpg","js","less","mp3", "mp4"]
@@ -408,6 +413,102 @@ def is_json_data(data):
         return True
     except:
         return False
+
+
+
+def LoggerUtil(name='example-logger', logfile='/tmp/test.log', level=5):
+    LEVEL = {
+        1: logging.CRITICAL,
+        2: logging.ERROR,
+        3: logging.WARNING,
+        4: logging.INFO,
+        5: logging.DEBUG,
+
+    }
+    logger = logging.getLogger()
+    logger.setLevel(LEVEL[level])
+    # create formatter
+    formatter = logging.Formatter(fmt="[%(asctime)s] [%(filename)s] [%(funcName)s] [%(lineno)d]  %(message)s")
+
+    # create handler
+    console_handler = logging.StreamHandler()
+    # console_handler.setLevel(logging.DEBUG)
+    console_handler.setFormatter(formatter)
+
+    
+    logger.addHandler(console_handler)
+
+    # create FileHandler
+    file_handler = logging.FileHandler(filename=logfile, mode='a', encoding='utf-8')
+    file_handler.setFormatter(formatter)
+    # file_handler.setLevel(LEVEL[level])
+    logger.addHandler(file_handler)
+
+    return logger
+
+
+
+class RedisUtil(object):
+    def __init__(self, db, host, password='', port=6379):
+        self.db = db
+        self.host = host
+        self.password = password
+        # self.taskqueue = taskqueue
+        self.port = port
+        self.connect()
+    
+    def connect(self):
+        try:
+            self.conn = redis.StrictRedis(
+                host=self.host,
+                port=self.port,
+                db=self.db,
+                password=self.password
+            )
+        except Exception as e:
+            print repr(e)
+            print "RedisUtil Connection Error"
+            self.conn = None
+        # finally:
+            # return conn
+
+
+    @property
+    def is_connected(self):
+        try:
+            if self.conn.ping():
+                return True
+        except:
+            print "RedisUtil Object Not Connencd"
+            return False
+
+
+    def task_push(self, queue, data):
+        self.conn.lpush(queue, (data))
+
+    def task_fetch(self, queue):
+        return self.conn.lpop(queue)
+    
+
+    @property
+    def task_count(self, queue):
+        return self.conn.llen(queue)
+    
+
+    def set_exist(self, setqueue, key):
+        return self.conn.sismember(setqueue, key)
+    
+    def set_push(self, setqueue, key):
+        self.conn.sadd(setqueue, key)
+
+class RedisConf:
+    db = '0'
+    host = '127.0.0.1'
+    password = ''
+    port = 6379
+    taskqueue = 'queue:task'
+
+
 
 if __name__ == '__main__':
     file = 'img.png'
