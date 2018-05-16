@@ -41,7 +41,7 @@ class Monitor(threading.Thread):
                 break
 
             with lock:
-                if plugin_num != len(Monitor.plugins):
+                if plugin_num() != len(Monitor.plugins):
                     Monitor.plugins = importpoc()
 
             task = None
