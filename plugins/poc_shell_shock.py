@@ -31,7 +31,9 @@ def verify(task):
         message['method'] = method
         message['param'] = payload
         save_to_databases(message)
-        return message
+        return True, message
+    
+    return (False, {})
     # code, head, res, errcode, _ = curl.curl('-A "%s" %s' % (payload, url))
     # if '1a8b8e54b53f63a4efae84e064373f12' in head:
     #     ret = {

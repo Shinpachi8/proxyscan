@@ -1350,6 +1350,7 @@ class SQLInjectionTime(object):
             logger.error("error happend, reason is :{}, URL: {}".format(repr(e), self.url))
             # r = self.testInjectionWithOR(varIndex)
 
+
 def verify(task):
     message = {
         "method": "",
@@ -1369,6 +1370,9 @@ def verify(task):
         message['url'] = url
         message['param'] = data
         save_to_databases(message)
+        return (True, message)
+    
+    return (False, {})
     
 
 

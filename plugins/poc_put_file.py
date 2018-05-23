@@ -26,7 +26,9 @@ def verify(task):
             message['param'] = '202cb962ac59075b964b07152d234b70'
             message['method'] = 'PUT'
             save_to_database(message)
-            return message
+            return (True, message)
     except Exception as e:
         pass
+    
+    return (False, {})
     

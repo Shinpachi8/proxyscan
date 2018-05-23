@@ -59,6 +59,7 @@ def verify(task):
     except Exception as e:
         # print repr(e)
         pass
+    return (False, {})
 
 def main():
     ip = '221.232.64.243'

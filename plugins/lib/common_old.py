@@ -12,18 +12,15 @@ import re
 import json
 import socket
 import time
-import string
+import redis
 import httplib
 import urllib
-import redis
 import logging
-import pymysql
-import random
 import requests
-from requests import  ConnectTimeout
 requests.packages.urllib3.disable_warnings()
 
-logging.getLogger('requests').setLevel(logging.WARNING)
+logging.getLogger("requests").setLevel(logging.WARNING)
+# logger.getLogger('request').setLevel()
 
 STATIC_EXT = ["f4v","bmp","bz2","css","doc","eot","flv","gif"]
 STATIC_EXT += ["gz","ico","jpeg","jpg","js","less","mp3", "mp4"]
@@ -40,8 +37,7 @@ BLACK_LIST_HOST += ['services.addons.mozilla.org', 'g-fox.cn', 'addons.firefox.c
 BLACK_LIST_HOST += ['versioncheck-bg.addons.mozilla.org', 'firefox.settings.services.mozilla.com']
 BLACK_LIST_HOST += ['blocklists.settings.services.mozilla.com', 'normandy.cdn.mozilla.net']
 BLACK_LIST_HOST += ['activity-stream-icons.services.mozilla.com', 'ocsp.digicert.com']
-BLACK_LIST_HOST += ['safebrowsing.clients.google.com', 'safebrowsing-cache.google.com', 'localhost']
-BLACK_LIST_HOST += ['127.0.0.1']
+BLACK_LIST_HOST += ['safebrowsing.clients.google.com', 'safebrowsing-cache.google.com']
 
 class TURL(object):
     """docstring for TURL"""
@@ -171,29 +167,6 @@ class TURL(object):
 
 
 
-def LogUtil(path='/tmp/test.log', name='test'):
-    logger = logging.getLogger()
-    logger.setLevel(logging.DEBUG)
-
-    #create formatter
-    formatter = logging.Formatter(fmt=u'[%(asctime)s] [%(levelname)s] [%(funcName)s] %(message)s ')
-
-    # create console
-    console_handler = logging.StreamHandler()
-    console_handler.setFormatter(formatter)
-
-    # create file
-    file_handler = logging.FileHandler(path, encoding='utf-8')
-    console_handler.setFormatter(formatter)
-
-    logger.addHandler(console_handler)
-    logger.addHandler(file_handler)
-    return logger
-
-
-logger = LogUtil()
-
-
 class THTTPJOB(object):
     """docstring for THTTPJOB"""
     def __init__(self,
@@ -238,27 +211,18 @@ class THTTPJOB(object):
         self.files = files
         self.filename = filename
         self.filetype = filetype
-        # self.connect_error = False
         self.block_path = block_path
         self_headers = {
             'User-Agent': ('Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko)'
                 'Chrome/38.0.2125.111 Safari/537.36 IQIYI Cloud Security Scanner tp_cloud_security[at]qiyi.com'),
             'Connection': 'close',
         }
-        self.ConnectionErrorCount = 0
+        self.ConnectionError = False
         self.headers = headers if headers else self_headers
         self.block_static = block_static
         self.allow_redirects = allow_redirects
         self.verify = verify
-        self.is_json = is_json
         self.timeout = timeout
-        if self.method == 'GET':
-            self.request_param_dict = self.url.get_dict_query
-        else:
-            if self.is_json:
-                self.request_param_dict = json.loads(self.data)
-            else:
-                self.request_param_dict = dict(urlparse.parse_qsl(self.data))
 
 
     def request(self):
@@ -273,17 +237,13 @@ class THTTPJOB(object):
             self.response = requests.Response()
             return -1, {}, '', 0
         elif self.url.get_host in BLACK_LIST_HOST:
-            # print "found {} in black list host".format(self.url.get_host)
+            print "found {} in black list host".format(self.url.get_host)
             self.response = requests.Response()
             return -1, {}, '', 0
-        elif self.ConnectionErrorCount >=3 :
-            return -1, {}, '', 0
-
         else:
             start_time = time.time()
             try:
                 if self.method == 'GET':
-                    self.url.get_dict_query = self.request_param_dict
                     self.response = requests.get(
                         self.url.url_string(),
                         headers = self.headers,
@@ -294,7 +254,6 @@ class THTTPJOB(object):
                     end_time = time.time()
                 else:
                     if not self.files:
-                        self.data = self.request_param_dict
                         self.response = requests.post(
                             self.url.url_string(),
                             data = self.data,
@@ -317,11 +276,10 @@ class THTTPJOB(object):
                             )
                     end_time = time.time()
             except Exception as e:
-                print "[lib.common] [THTTPJOB.request] {}".format(repr(e))
+                print "[lib.common] [THHTPJON.request] {}".format(repr(e))
                 end_time = time.time()
-                self.ConnectionErrorCount += 1
                 return -1, {}, '', 0
-            self.time_check = end_time - start_time
+            self. time_check = end_time - start_time
             return self.response.status_code, self.response.headers, self.response.content, self.time_check
 
     def __str__(self):
@@ -367,22 +325,13 @@ def is_https(url, port=None):
     return service
 
 
-def is_json(data):
-    if not data:
-        return False
-    try:
-        json.loads(data)
-        return True
-    except:
-        return False
-
 
 class Pollution(object):
     """
     this class aim to use the payload
     to the param in requests
     """
-    def __init__(self, query, payloads, pollution_all=False, isjson=False, replace=True):
+    def __init__(self, query, payloads, replace=True, pollution_all=False, isjson=False):
         """
         :query: the url query part
         :payloads:  List, the payloads to added in params
@@ -408,7 +357,7 @@ class Pollution(object):
             for payload in self.payloads:
                 tmp_qs = query_dict.copy()
                 if self.replace:
-                    tmp_qs[key] = payload
+                    tmp_qs[key] =  payload
                 else:
                     tmp_qs[key] = tmp_qs[key] + payload
                 self.polluted_urls.append(tmp_qs)
@@ -456,61 +405,48 @@ class Url:
         return urllib.quote(qs)
 
 
-class MySQLUtils():
-    host = '127.0.0.1'
-    port = 3306
-    username = 'root'
-    password = ''
-    db = 'vuln'
 
-    def __init__(self):
-        self.conn = pymysql.connect(host=MySQLUtils.host,
-                             user=MySQLUtils.username,
-                             password=MySQLUtils.password,
-                             charset='utf8mb4',
-                             db=MySQLUtils.db)
-
-    def insert(self, sql):
-        with self.conn.cursor() as cursor:
-            cursor.execute(sql)
-            self.conn.commit()
-
-    def fetchone(self, sql):
-        data = ''
-        with self.conn.cursor() as cursor:
-            cursor.execute(sql)
-            data = cursor.fetchone()
-        return data
-
-    def fetchall(self, sql):
-        data = []
-        with self.conn.cursor() as cursor:
-            cursor.execute(sql)
-            data = cursor.fetchall()
-        return data
-
-    def close(self):
-        self.conn.close()
-
-
-def random_str(length=8):
-    s = string.lowercase + string.uppercase + string.digits
-    return "".join(random.sample(s, length))
+def is_json(data):
+    try:
+        json.loads(data)
+        return True
+    except:
+        return False
 
 
 
-class RedisConf:
-    db = '0'
-    host = '127.0.0.1'
-    password = ''
-    port = 6379
-    taskqueue = 'queue:task'
+def LoggerUtil(name='example-logger', logfile='/tmp/test.log', level=5):
+    LEVEL = {
+        1: logging.CRITICAL,
+        2: logging.ERROR,
+        3: logging.WARNING,
+        4: logging.INFO,
+        5: logging.DEBUG,
+
+    }
+    logger = logging.getLogger()
+    logger.setLevel(LEVEL[level])
+    # create formatter
+    formatter = logging.Formatter(fmt="[%(asctime)s] [%(filename)s] [%(funcName)s] [%(lineno)d]  %(message)s")
+
+    # create handler
+    console_handler = logging.StreamHandler()
+    # console_handler.setLevel(logging.DEBUG)
+    console_handler.setFormatter(formatter)
 
 
-REDIS_DB = '0'
-REDIS_HOST = '127.0.0.1'
-REDIS_PASSWORD = ''
-SQLI_TIME_QUEUE = 'time:queue'
+    logger.addHandler(console_handler)
+
+    # create FileHandler
+    file_handler = logging.FileHandler(filename=logfile, mode='a', encoding='utf-8')
+    file_handler.setFormatter(formatter)
+    # file_handler.setLevel(LEVEL[level])
+    logger.addHandler(file_handler)
+
+    return logger
+
+
+logger = LoggerUtil()
 
 class RedisUtil(object):
     def __init__(self, db, host, password='', port=6379):
@@ -565,8 +501,14 @@ class RedisUtil(object):
     def set_push(self, setqueue, key):
         self.conn.sadd(setqueue, key)
 
-    #def close(self):
-    #    self.conn.close()
+class RedisConf:
+    db = '0'
+    host = '127.0.0.1'
+    password = ''
+    port = 6379
+    taskqueue = 'queue:task'
+
+
 
 if __name__ == '__main__':
     file = 'img.png'

@@ -29,6 +29,8 @@ def verify(task):
                 'param': ''
             }
             save_to_database(message)
-            return message
+            return True, message
     except Exception as e:
         pass
+    
+    return (False, {})

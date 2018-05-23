@@ -22,7 +22,8 @@ def verify(task):
         message['method'] = method
         message['url'] = result['target']
         save_to_databases(message)
-        return message
-    
+        return True, message
+
+    return (False,{})   
         # return message
     
