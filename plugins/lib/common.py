@@ -41,7 +41,7 @@ BLACK_LIST_HOST += ['versioncheck-bg.addons.mozilla.org', 'firefox.settings.serv
 BLACK_LIST_HOST += ['blocklists.settings.services.mozilla.com', 'normandy.cdn.mozilla.net']
 BLACK_LIST_HOST += ['activity-stream-icons.services.mozilla.com', 'ocsp.digicert.com']
 BLACK_LIST_HOST += ['safebrowsing.clients.google.com', 'safebrowsing-cache.google.com', 'localhost']
-BLACK_LIST_HOST += ['127.0.0.1']
+# BLACK_LIST_HOST += ['127.0.0.1']
 
 class TURL(object):
     """docstring for TURL"""
