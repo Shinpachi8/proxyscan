@@ -6,6 +6,7 @@
 import threading
 import glob
 import importlib
+import sys
 from plugins.lib.common import *
 
 def importpoc():
@@ -47,7 +48,7 @@ class Monitor(threading.Thread):
             task = None
             with lock:
                 task = self.conn.task_fetch(RedisConf.taskqueue)
-            
+
             if task:
                 task = json.loads(task)
                 for p in Monitor.plugins:
@@ -56,10 +57,10 @@ class Monitor(threading.Thread):
                         # save to mysql
                         logger.info("[found] Message={}".format(message))
             else:
-                logger.info("now, we have no task and sleep..")
-                time.sleep(600)
+                sys.stdout.write('\r{}'.format("now, we have no task and sleep.."))
+                time.sleep(1)
 
-                
+
 
 
 def start_point():
@@ -68,10 +69,10 @@ def start_point():
         t = Monitor()
         t.setDaemon = True
         threads.append(t)
-    
+
     for t in threads:
         t.start()
-    
+
     while True:
         try:
             if threading.active_count <= 1:
@@ -92,6 +93,7 @@ def start_point():
 
 def main():
     print RedisConf.db
+    start_point()
 
 if __name__ == '__main__':
     main()

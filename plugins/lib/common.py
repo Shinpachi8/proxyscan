@@ -20,7 +20,6 @@ import requests
 requests.packages.urllib3.disable_warnings()
 
 logging.getLogger("requests").setLevel(logging.WARNING)
-logger = LoggerUtil()
 # logger.getLogger('request').setLevel()
 
 STATIC_EXT = ["f4v","bmp","bz2","css","doc","eot","flv","gif"]
@@ -282,7 +281,7 @@ class THTTPJOB(object):
                 return -1, {}, '', 0
             self. time_check = end_time - start_time
             return self.response.status_code, self.response.headers, self.response.content, self.time_check
-    
+
     def __str__(self):
         return "[THTTPOBJ] method={} url={} data={}".format(self.method, self.url.url_string(), self.data )
 
@@ -407,7 +406,7 @@ class Url:
 
 
 
-def is_json_data(data):
+def is_json(data):
     try:
         json.loads(data)
         return True
@@ -435,7 +434,7 @@ def LoggerUtil(name='example-logger', logfile='/tmp/test.log', level=5):
     # console_handler.setLevel(logging.DEBUG)
     console_handler.setFormatter(formatter)
 
-    
+
     logger.addHandler(console_handler)
 
     # create FileHandler
@@ -447,6 +446,7 @@ def LoggerUtil(name='example-logger', logfile='/tmp/test.log', level=5):
     return logger
 
 
+logger = LoggerUtil()
 
 class RedisUtil(object):
     def __init__(self, db, host, password='', port=6379):
@@ -456,7 +456,7 @@ class RedisUtil(object):
         # self.taskqueue = taskqueue
         self.port = port
         self.connect()
-    
+
     def connect(self):
         try:
             self.conn = redis.StrictRedis(
@@ -488,16 +488,16 @@ class RedisUtil(object):
 
     def task_fetch(self, queue):
         return self.conn.lpop(queue)
-    
+
 
     @property
     def task_count(self, queue):
         return self.conn.llen(queue)
-    
+
 
     def set_exist(self, setqueue, key):
         return self.conn.sismember(setqueue, key)
-    
+
     def set_push(self, setqueue, key):
         self.conn.sadd(setqueue, key)
 

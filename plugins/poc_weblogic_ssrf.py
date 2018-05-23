@@ -3,7 +3,7 @@
 import re
 import requests
 import urlparse
-from config improt *
+from config import *
 
 def verify(task):
 

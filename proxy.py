@@ -30,10 +30,11 @@ class BlueProxy(flow.FlowMaster):
 
     def __init__(self, opts, server, state):
         super(BlueProxy, self).__init__(opts, server, state)
-        self.task_queue = Queue.Queue()
+        #self.task_queue = Queue.Queue()
         #self.cif_task_queue = Queue.Queue()
         #self.cif_result_queue = Queue.Queue()
         self.url_queue = Queue.Queue()
+        self.data_queue = Queue.Queue()
         #self.ssti_task_queue = Queue.Queue()
         self.STOP_ME = False
         self.start_time = time.time()
@@ -57,8 +58,9 @@ class BlueProxy(flow.FlowMaster):
         # threading.lock
         self.lock = threading.Lock()
 
-        threading.Thread(target=self._print_msg).start()
         threading.Thread(target=self.duplicate_thread).start()
+        threading.Thread(target=self._print_msg).start()
+        threading.Thread(target=self.send2redis).start()
         #threading.Thread(target=self.save_cif_result).start()
 
         #插入URL到本地或远程任务队列中
@@ -68,7 +70,7 @@ class BlueProxy(flow.FlowMaster):
         while not self.STOP_ME:
             try:
                 result = self.task_queue.get(timeout=0.1)
-                print result
+                #print result
                 time.sleep(0.1)
             except Exception as e:
                 continue
@@ -78,13 +80,13 @@ class BlueProxy(flow.FlowMaster):
         cprint('-'*35, 'cyan')
         while not self.STOP_ME:
             try:
-                msg = '%s TOTAL| %s QSIZE | %.1f Sec Running' % (
-                    self.url_count, self.task_queue.qsize(), time.time() - self.start_time)
-                sys.stdout.write('\r' + msg)
+                msg = '%s TOTAL|  %.1f Sec Running' % (
+                    self.url_count, time.time() - self.start_time)
+                sys.stdout.write('\r{}'.format(msg))
                 sys.stdout.flush()
                 time.sleep(1)
             except Exception, e:
-                print e
+                print 'error_in_print_msg={}'.format(repr(e))
 
     def duplicate_thread(self):
         while not self.STOP_ME:
@@ -99,11 +101,11 @@ class BlueProxy(flow.FlowMaster):
                 if ret:
                     mysqldb_io = MysqlInterface()
                     mysqldb_io.insert_result(result)
-                    self.task_queue.put(result)
+                    #self.task_queue.put(result)
                     self.url_count += 1
             except Exception, e:
                 time.sleep(1)
-                print str(e)
+                #print str(e)
                 continue
 
     # def put_thread(self):
@@ -316,10 +318,22 @@ class BlueProxy(flow.FlowMaster):
             parser = ResponseParser(msg).parser_data()
             if parser:
                 self.url_queue.put(parser)
-                data = json.dumps(parser)
-                self.redis_conn.task_push(RedisConf.taskqueue, data)
+                self.data_queue.put(parser)
+                #data = json.dumps(parser)
+                #self.redis_conn.task_push(RedisConf.taskqueue, data)
         except Exception, e:
             print e
+
+    def send2redis(self):
+        while not self.STOP_ME:
+            try:
+                data = self.data_queue.get()
+                data = json.dumps(data)
+                self.redis_conn.task_push(RedisConf.taskqueue, data)
+            except Exception as e:
+                print repr(e)
+                time.sleep(1)
+
 
         # memory overfull bug
         #print(len(self.state.flows))
