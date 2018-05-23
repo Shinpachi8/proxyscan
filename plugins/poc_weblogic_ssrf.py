@@ -8,7 +8,7 @@ from config import *
 def verify(task):
 
     url = task['url']
-    headers = task['headers']
+    headers = task['request_header']
 
     parsed_url = urlparse.urlparse(url)
     target = 'http://%s/' % (parsed_url.netloc) + '/uddiexplorer/SearchPublicRegistries.jsp?operator=operator' \

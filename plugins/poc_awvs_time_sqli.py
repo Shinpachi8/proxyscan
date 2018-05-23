@@ -73,7 +73,7 @@ class SQLInjectionTime(object):
         self.longDuration = 6
 
         logger.info('URL: {}'.format(self.url))
-        logger.info('OrigValue: {}'.format(repr(self.orivalue)))
+        #logger.info('OrigValue: {}'.format(repr(self.orivalue)))
 
 
 
@@ -225,7 +225,7 @@ class SQLInjectionTime(object):
         confirmResult = False
         while True:
             confirmResult = self.confirmInjection(varIndex, quoteChar, likeInjection, confirmed)
-            logger.info("confirmResult={}".format(confirmResult))
+            #logger.info("confirmResult={}".format(confirmResult))
 
             if (not confirmResult):
                 # print "!!!!!!!!!!!!!!!!!!!!!!!!!"
@@ -242,7 +242,7 @@ class SQLInjectionTime(object):
         confirmResult = False
         while True:
             confirmResult = self.confirmInjectionNumber(varIndex, quoteChar, likeInjection, confirmed)
-            logger.info("confirmResult={}".format(confirmResult))
+            #logger.info("confirmResult={}".format(confirmResult))
 
             if (not confirmResult):
                 # print "!!!!!!!!!!!!!!!!!!!!!!!!!"
@@ -260,7 +260,7 @@ class SQLInjectionTime(object):
         confirmResult = False
         while True:
             confirmResult = self.confirmInjectionWithOR(varIndex, quoteChar, confirmed, dontCommentRestOfQuery)
-            logger.info("confirmResult={}".format(confirmResult))
+            #("confirmResult={}".format(confirmResult))
 
             if (not confirmResult):
                 print "!!!!!!!!!!!!!!!!!!!!!!!!!"
@@ -311,9 +311,9 @@ class SQLInjectionTime(object):
             prefix_payload = quoteChar[:quoteChar.find(')')]
             payload1 = likeStr + quoteChar + " AND 2*3*8=6*8 AND " + '(' + prefix_payload + randStr + prefix_payload + equalitySign + prefix_payload + randStr  + likeStr
         # 生成payload
-        logger.info("payload1= {}".format(repr(payload1)))
+        #logger.info("payload1= {}".format(repr(payload1)))
         paramValue = self.get_request_payload(origValue, varIndex, payload1)
-        logger.debug("paramValue= {}".format(repr(paramValue)))
+        #logger.debug("paramValue= {}".format(repr(paramValue)))
         # 如果正确，这里只有一个值
         self.hj.request_param_dict = paramValue
         status_code, headers, html, time_used = self.hj.request()
@@ -321,10 +321,10 @@ class SQLInjectionTime(object):
             logger.info('has error??????')
             return False
 
-        logger.info('origValue={}'.format(origValue))
+        #logger.info('origValue={}'.format(origValue))
         #logger.info('self.variations={}'.format(self.variations))
         testBody = self.filter_body(html, payload1)
-        logger.info('paramValue[self.variations] = {}'.format(paramValue[self.variations[varIndex]].replace(origValue[self.variations[varIndex]], '')))
+        #logger.info('paramValue[self.variations] = {}'.format(paramValue[self.variations[varIndex]].replace(origValue[self.variations[varIndex]], '')))
         #if difflib.SequenceMatcher(lambda x:x in ' \t', testBody, origBody).ratio() < 0.9:
         if testBody != origBody:
             #logger.info('paramValue')
@@ -341,7 +341,7 @@ class SQLInjectionTime(object):
             payload2 = likeStr + quoteChar + " AND 2*3*8=6*9 AND " + '\'' + randStr + '\'' + equalitySign + quoteChar + randStr  + likeStr
         else:
             payload2 = likeStr + quoteChar + " AND 2*3*8=6*9 AND " + '(' + prefix_payload + randStr + prefix_payload + equalitySign + prefix_payload + randStr  + likeStr
-        logger.info("payload2= {}".format(payload2))
+        #logger.info("payload2= {}".format(payload2))
         paramValue = self.get_request_payload(origValue, varIndex, payload2)
 
         # 如果正确，这里只有一个值
@@ -361,9 +361,9 @@ class SQLInjectionTime(object):
             payload3 = likeStr + quoteChar + " AND 3*3<(2*4) AND " + '\'' + randStr + '\'' + equalitySign + quoteChar + randStr  + likeStr
         else:
             payload3 = likeStr + quoteChar + " AND 3*3<(2*4) AND " + '(' + prefix_payload + randStr + prefix_payload + equalitySign + prefix_payload + randStr  + likeStr
-        logger.info("payload3= {}".format(payload3))
+        #logger.info("payload3= {}".format(payload3))
         paramValue = self.get_request_payload(origValue, varIndex, payload3)
-        logger.debug("paramValue= {}".format(paramValue))
+        l#ogger.debug("paramValue= {}".format(paramValue))
         # 如果正确，这里只有一个值
         self.hj.request_param_dict = paramValue
         status_code, headers, html, time_used = self.hj.request()
@@ -380,7 +380,7 @@ class SQLInjectionTime(object):
             payload4 = likeStr + quoteChar + " AND 3*2>(1*5) AND " + '\'' + randStr + '\'' + equalitySign + quoteChar + randStr  + likeStr
         else:
             payload4 = likeStr + quoteChar + " AND 3*2>(1*5) AND " + '(' + prefix_payload + randStr + prefix_payload + equalitySign + prefix_payload + randStr  + likeStr
-        logger.info("payload4= {}".format(payload4))
+        #logger.info("payload4= {}".format(payload4))
         paramValue = self.get_request_payload(origValue, varIndex, payload4)
 
         # 如果正确，这里只有一个值
@@ -393,9 +393,9 @@ class SQLInjectionTime(object):
         testBody = self.filter_body(html, payload4)
         #if difflib.SequenceMatcher(lambda x:x in ' \t', testBody, origBody).ratio() < 0.9:
         if testBody != origBody:
-            logger.info('{}'.format(testBody))
-            logger.info('------------------------------')
-            logger.info('{}'.format(origBody))
+            #logger.info('{}'.format(testBody))
+            #logger.info('------------------------------')
+           #logger.info('{}'.format(origBody))
             return False
         # and to conrimInjecitionHistory
 
@@ -404,7 +404,7 @@ class SQLInjectionTime(object):
             payload5 = likeStr + quoteChar + " AND 3*2*0>=0 AND " + '\'' + randStr + '\'' + equalitySign + quoteChar + randStr  + likeStr
         else:
             payload5 = likeStr + quoteChar + " AND 3*2*0>=0 AND " + '(' + prefix_payload + randStr + prefix_payload + equalitySign + prefix_payload + randStr  + likeStr
-        logger.info("payload5= {}".format(payload5))
+        #logger.info("payload5= {}".format(payload5))
         paramValue = self.get_request_payload(origValue, varIndex, payload5)
 
         # 如果正确，这里只有一个值
@@ -424,7 +424,7 @@ class SQLInjectionTime(object):
             payload6 = likeStr + quoteChar + " AND 3*3*9<(2*4) AND " + '\'' + randStr + '\'' + equalitySign + quoteChar + randStr  + likeStr
         else:
             payload6 = likeStr + quoteChar + " AND 3*3*9<(2*4) AND " + '(' + prefix_payload + randStr + prefix_payload + equalitySign + prefix_payload + randStr  + likeStr
-        logger.info("payload6= {}".format(payload6))
+        #logger.info("payload6= {}".format(payload6))
         paramValue = self.get_request_payload(origValue, varIndex, payload6)
 
         # 如果正确，这里只有一个值
@@ -446,7 +446,7 @@ class SQLInjectionTime(object):
             payload7 = likeStr + quoteChar + " AND 5*4=20 AND " + '\'' + randStr + '\'' + equalitySign + quoteChar + randStr  + likeStr
         else:
             payload7 = likeStr + quoteChar + " AND 5*4=20 AND " + '(' + prefix_payload + randStr + prefix_payload + equalitySign + prefix_payload + randStr  + likeStr
-        logger.info("payload7= {}".format(payload7))
+        #logger.info("payload7= {}".format(payload7))
         paramValue = self.get_request_payload(origValue, varIndex, payload7)
 
         # 如果正确，这里只有一个值
@@ -467,7 +467,7 @@ class SQLInjectionTime(object):
             payload8 = likeStr + quoteChar + " AND 5*4=21 AND "+ '\'' + randStr + '\'' + equalitySign + quoteChar + randStr  + likeStr
         else:
             payload8 = likeStr + quoteChar + " AND 5*4=21 AND " + '(' + prefix_payload + randStr + prefix_payload + equalitySign + prefix_payload + randStr  + likeStr
-        logger.info("payload8= {}".format(payload8))
+        #logger.info("payload8= {}".format(payload8))
         paramValue = self.get_request_payload(origValue, varIndex, payload8)
 
         # 如果正确，这里只有一个值
@@ -487,7 +487,7 @@ class SQLInjectionTime(object):
             payload9 = likeStr + quoteChar + " AND 5*6<26 AND " + '\'' + randStr + '\'' + equalitySign + quoteChar + randStr  + likeStr
         else:
             payload9 = likeStr + quoteChar + " AND 5*6<26 AND " + '(' + prefix_payload + randStr + prefix_payload + equalitySign + prefix_payload + randStr  + likeStr
-        logger.info("payload9= {}".format(payload9))
+        #logger.info("payload9= {}".format(payload9))
         paramValue = self.get_request_payload(origValue, varIndex, payload9)
 
         # 如果正确，这里只有一个值
@@ -507,7 +507,7 @@ class SQLInjectionTime(object):
             payload10 = likeStr + quoteChar + " AND 7*7>48 AND " + '\'' + randStr + '\'' + equalitySign + quoteChar + randStr  + likeStr
         else:
             payload10 = likeStr + quoteChar + " AND 7*7>48 AND " +  '(' + prefix_payload + randStr + prefix_payload + equalitySign + prefix_payload + randStr  + likeStr
-        logger.info("payload10= {}".format(payload10))
+        #logger.info("payload10= {}".format(payload10))
         paramValue = self.get_request_payload(origValue, varIndex, payload10)
 
         # 如果正确，这里只有一个值
@@ -526,7 +526,7 @@ class SQLInjectionTime(object):
             payload11 = likeStr + quoteChar + " AND 3*2*0=6 AND "+ '\'' + randStr + '\'' + equalitySign + quoteChar + randStr  + likeStr
         else:
             payload11 = likeStr + quoteChar + " AND 3*2*0=6 AND " + '(' + prefix_payload + randStr + prefix_payload + equalitySign + prefix_payload + randStr  + likeStr
-        logger.info("payload11= {}".format(payload11))
+        #logger.info("payload11= {}".format(payload11))
         paramValue = self.get_request_payload(origValue, varIndex, payload11)
 
         # 如果正确，这里只有一个值
@@ -546,7 +546,7 @@ class SQLInjectionTime(object):
             payload12 = likeStr + quoteChar + " AND 3*2*1=6 AND " + '\'' + randStr + '\'' + equalitySign + quoteChar + randStr  + likeStr
         else:
             payload12 = likeStr + quoteChar + " AND 3*2*1=6 AND " + '(' + prefix_payload + randStr + prefix_payload + equalitySign + prefix_payload + randStr  + likeStr
-        logger.info("payload12= {}".format(payload12))
+        #logger.info("payload12= {}".format(payload12))
         paramValue = self.get_request_payload(origValue, varIndex, payload12)
 
         # 如果正确，这里只有一个值
@@ -602,9 +602,9 @@ class SQLInjectionTime(object):
         payload1 = likeStr + quoteChar + " AND 2*3*8=6*8 -- "
 
         # 生成payload
-        logger.info("payload1= {}".format(repr(payload1)))
+        #logger.info("payload1= {}".format(repr(payload1)))
         paramValue = self.get_request_payload(origValue, varIndex, payload1)
-        logger.debug("paramValue= {}".format(repr(paramValue)))
+        #logger.debug("paramValue= {}".format(repr(paramValue)))
         # 如果正确，这里只有一个值
         self.hj.request_param_dict = paramValue
         status_code, headers, html, time_used = self.hj.request()
@@ -612,7 +612,7 @@ class SQLInjectionTime(object):
             logger.info('has error??????')
             return False
 
-        logger.info('origValue={}'.format(origValue))
+        #logger.info('origValue={}'.format(origValue))
         #logger.info('self.variations={}'.format(self.variations))
         testBody = self.filter_body(html, payload1)
         # logger.info('paramValue[self.variations] = {}'.format(paramValue[self.variations[varIndex]].replace(origValue[self.variations[varIndex]], '')))
@@ -650,7 +650,7 @@ class SQLInjectionTime(object):
 
         payload3 = likeStr + quoteChar + " AND 3*3<(2*4) -- "
 
-        logger.info("payload2= {}".format(repr(payload3)))
+        #logger.info("payload2= {}".format(repr(payload3)))
         paramValue = self.get_request_payload(origValue, varIndex, payload3)
         # logger.debug("paramValue= {}".format(paramValue))
         # 如果正确，这里只有一个值
@@ -668,7 +668,7 @@ class SQLInjectionTime(object):
         # add to confirmInjectionHistory
 
         payload4 = likeStr + quoteChar + " AND 3*2>(1*5) -- "
-        logger.info("payload2= {}".format(repr(payload4)))
+        #logger.info("payload2= {}".format(repr(payload4)))
         paramValue = self.get_request_payload(origValue, varIndex, payload4)
 
         # 如果正确，这里只有一个值
@@ -687,7 +687,7 @@ class SQLInjectionTime(object):
         # 测试真值
 
         payload5 = likeStr + quoteChar + " AND 3*2*0>=0 -- "
-        logger.info("payload2= {}".format(repr(payload5)))
+        #logger.info("payload2= {}".format(repr(payload5)))
         paramValue = self.get_request_payload(origValue, varIndex, payload5)
 
         # 如果正确，这里只有一个值
@@ -706,7 +706,7 @@ class SQLInjectionTime(object):
         # 然后再测假值
 
         payload6 = likeStr + quoteChar + " AND 3*3*9<(2*4) -- "
-        logger.info("payload2= {}".format(repr(payload6)))
+        #logger.info("payload2= {}".format(repr(payload6)))
         paramValue = self.get_request_payload(origValue, varIndex, payload6)
 
         # 如果正确，这里只有一个值
@@ -728,7 +728,7 @@ class SQLInjectionTime(object):
 
         payload7 = likeStr + quoteChar + " AND 5*4=20 -- "
 
-        logger.info("payload2= {}".format(repr(payload7)))
+        #logger.info("payload2= {}".format(repr(payload7)))
         paramValue = self.get_request_payload(origValue, varIndex, payload7)
 
         # 如果正确，这里只有一个值
@@ -749,7 +749,7 @@ class SQLInjectionTime(object):
 
         payload8 = likeStr + quoteChar + " AND 5*4=21 -- "
 
-        logger.info("payload2= {}".format(repr(payload8)))
+        #logger.info("payload2= {}".format(repr(payload8)))
         paramValue = self.get_request_payload(origValue, varIndex, payload8)
 
         # 如果正确，这里只有一个值
@@ -769,7 +769,7 @@ class SQLInjectionTime(object):
 
         payload9 = likeStr + quoteChar + " AND 5*6<26 -- "
 
-        logger.info("payload2= {}".format(repr(payload9)))
+        #logger.info("payload2= {}".format(repr(payload9)))
         paramValue = self.get_request_payload(origValue, varIndex, payload9)
 
         # 如果正确，这里只有一个值
@@ -789,7 +789,7 @@ class SQLInjectionTime(object):
 
         payload10 = likeStr + quoteChar + " AND 7*7>48 -- "
 
-        logger.info("payload2= {}".format(repr(payload10)))
+        #logger.info("payload2= {}".format(repr(payload10)))
         paramValue = self.get_request_payload(origValue, varIndex, payload10)
 
         # 如果正确，这里只有一个值
@@ -807,7 +807,7 @@ class SQLInjectionTime(object):
 
         payload11 = likeStr + quoteChar + " AND 3*2*0=6 -- "
 
-        logger.info("payload2= {}".format(repr(payload11)))
+        #logger.info("payload2= {}".format(repr(payload11)))
         paramValue = self.get_request_payload(origValue, varIndex, payload11)
 
         # 如果正确，这里只有一个值
@@ -827,7 +827,7 @@ class SQLInjectionTime(object):
 
         payload12 = likeStr + quoteChar + " AND 3*2*1=6 -- "
 
-        logger.info("payload2= {}".format(repr(payload12)))
+        #logger.info("payload2= {}".format(repr(payload12)))
         paramValue = self.get_request_payload(origValue, varIndex, payload12)
 
         # 如果正确，这里只有一个值
@@ -1272,8 +1272,8 @@ class SQLInjectionTime(object):
         # send payload
         for quoteChar in prefix:
             payload = quoteChar[0] + " or (select(0)from(select(sleep({SLEEP})))v)/*'%2b(select(0)from(select(sleep({SLEEP})))v)%2b0'\"%2b(select(0)from(select(sleep({SLEEP})))v)+\"*/" + " or " + quoteChar[1]
-            print repr(payload)
-            print "------------------------"
+            #print repr(payload)
+            #print "------------------------"
             time_result = self.testTiming(varIndex, payload, True, benchmark=False)
             if time_result:
        # logger.debug("paramValue= {}".format(repr(paramValue)))

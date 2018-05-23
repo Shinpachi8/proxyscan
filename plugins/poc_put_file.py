@@ -15,7 +15,7 @@ def verify(task):
     }
 
     url = task['url']
-    headers = task['headers']
+    headers = task['request_header']
     parsed_url = urlparse.urlparse(url)
     target = parsed_url.scheme + "://" + parsed_url.netloc + "/bugscan.txt"
     try:
