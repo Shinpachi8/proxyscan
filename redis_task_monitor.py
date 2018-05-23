@@ -45,6 +45,8 @@ class Monitor(threading.Thread):
                 if plugin_num() != len(Monitor.plugins):
                     Monitor.plugins = importpoc()
 
+            #print "Monitor.plugisn.len={}".format(len(Monitor.plugins))
+            #print Monitor.plugins
             task = None
             with lock:
                 task = self.conn.task_fetch(RedisConf.taskqueue)

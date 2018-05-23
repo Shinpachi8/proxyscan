@@ -284,6 +284,7 @@ class THTTPJOB(object):
             try:
                 if self.method == 'GET':
                     self.url.get_dict_query = self.request_param_dict
+                    print "request url: {}".format(self.url.url_string())
                     self.response = requests.get(
                         self.url.url_string(),
                         headers = self.headers,

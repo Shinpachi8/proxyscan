@@ -1,3 +1,0 @@
-[2018-05-23 17:46:44,730] [poc_awvs_time_sqli.py] [75] URL: http://10.127.21.237/dvwa/vulnerabilities/sqli_blind/?id=1&Submit=Submit
-[2018-05-23 17:46:44,730] [poc_awvs_time_sqli.py] [76] OrigValue: {u'id': u'1', u'Submit': u'Submit'}
-[2018-05-23 17:46:44,736] [poc_awvs_time_sqli.py] [1350] error happend, reason is :AttributeError("'THTTPJOB' object has no attribute 'ConnectionErrorCount'",), URL: http://10.127.21.237/dvwa/vulnerabilities/sqli_blind/?id=1&Submit=Submit

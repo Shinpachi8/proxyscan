@@ -16,6 +16,7 @@ from lib.common import *
 requests.packages.urllib3.disable_warnings()
 
 def verify(task):
+    print "=============\n now in xss\n============="
     """
     the verify function
     :param: task,  the request item , like {
@@ -50,6 +51,7 @@ def verify(task):
     # XSS里如果没有query字段，就在最后追加
     if url_parse.query == "" and method == 'GET':
         #pass
+        print 'fuck'
         return (False, {})
         # for key in XSS_Rule.keys():
         #     for payload in XSS_Rule[key]:
@@ -64,7 +66,7 @@ def verify(task):
         if method == 'GET':
             query_string = hj.url.get_query
         else:
-            if is_json_data(data):
+            if is_json(data):
                 isjson = True
                 query_string = urllib.urlencode(json.loads(data))
             else:
@@ -76,19 +78,24 @@ def verify(task):
                 break
 
             query_dict_list = Pollution(query_string, XSS_Rule[rule_key], isjson=isjson).payload_generate()
+            #print query_dict_list
             for query_dict in query_dict_list:
                 if found:
                     break
-                if method == 'GET':
-                    hj.url.get_dict_query = query_dict
-                else:
-                    if isjson:
-                        hj.data = json.dumps(query_dict)
-                    else:
-                        hj.data = urllib.urlencode(query_dict)
+                #if method == 'GET':
+                #    hj.url.get_dict_query = query_dict
+                #else:
+                #    if isjson:
+                #        hj.data = json.dumps(query_dict)
+                #    else:
+                #        hj.data = urllib.urlencode(query_dict)
+                hj.request_param_dict = query_dict
 
                 status_code, headers, html, time_used = hj.request()
+                #print status_code, headers, html, time_used
                 if status_code == 200 and headers.get('Content-Type', '').split(';')[0] not in ["application/json", "text/plain", "application/javascript", "text/json", "text/javascript", "application/x-javascript"]:
+                    print 'yes'
+                    print hj.url
                     for rules in XSS_Rule[rule_key]:
                         if html.find(rules) >= 0:
                             found = True
@@ -166,13 +173,14 @@ def verify(task):
 if __name__ == '__main__':
     item = {
         "method" : "GET",
-        "url" : "http://api.t.iqiyi.com/feed/get_feed?uid=1409979958&authcookie=44zpCeNFgez79OVwz7GjJWVUaTN2m1bHxsQNLm306MVZm2m3ruh4Qm2w4SYwqDT9sDTos148d&device_id=mqaguvg2qatzipbhxzd2sbcxadxumaaz&agenttype=121&agentversion=6.0.46.4598&wallId=false&feedId=30267718948&version=1&praise=0&callback=jQuery17206312791961245239_1502178651908&_=1502178652025",
-        "request_header" : {"Accept-Language": "en-US,en;q=0.8", "Accept-Encoding": "identity", "Accept": "*/*", "User-Agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.85 Safari/537.36 Falcon/5.0.7.1", "Host": "api.t.iqiyi.com", "Referer": "http://paopaoquan.iqiyi.com/feed", "Cookie": "P00004=-898887952.1501743222.891ba158bb; QC008=1498535221.1501744345.1501744345.3; QC005=437b5f59bacf7103319dfd55207aba05; P00001=08ZcbLqh22iWe52Oy9ivM7Lk6keffU7xIucJm1m2JUUYz930Njm2ijm1L5rwlkm13zYuYQS13; P00003=1408465522; P00010=1408465522; P01010=1501776000; P00007=08ZcbLqh22iWe52Oy9ivM7Lk6keffU7xIucJm1m2JUUYz930Njm2ijm1L5rwlkm13zYuYQS13; P00PRU=1408465522; P00002=%7B%22uid%22%3A%221408465522%22%2C%22user_name%22%3A%2218510725391%22%2C%22email%22%3A%22xiaoyan_jia1%40163.com%22%2C%22nickname%22%3A%22%5Cu7231%5Cu559d%5Cu996e%5Cu6599s%5Cu516c%5Cu4ef2%5Cu6668%22%2C%22pru%22%3A1408465522%2C%22type%22%3A11%2C%22pnickname%22%3A%22%5Cu7231%5Cu559d%5Cu996e%5Cu6599s%5Cu516c%5Cu4ef2%5Cu6668%22%7D; P000email=xiaoyan_jia1%40163.com; QC160=%7B%22u%22%3A%2218510725391%22%2C%22lang%22%3Afalse%2C%22local%22%3A%7B%22name%22%3A%22%E4%B8%AD%E5%9B%BD%E5%A4%A7%E9%99%86%22%2C%22init%22%3A%22Z%22%2C%22rcode%22%3A48%2C%22acode%22%3A%2286%22%7D%2C%22type%22%3A%22p%22%7D; QC911=%2Ca%2C; QC006=dvp8siolnl5z9noyqsawy4ke; Hm_lvt_53b7374a63c37483e5dd97d78d9bb36e=1501744707; _ga=GA1.2.2099195777.1501754894; __dfp=a03f42a0ff28c54146a475515ac6107716ac525722f5524a60655b7c247897c14e@1504346712080@1501754712080; T00404=bcd404d21b7724fa0b932f06b949a6b4; pps_client_ver2=6.0.46.4598", "Proxy-Connection": "keep-alive"},
+        "url" : "http://10.127.21.237/dvwa/vulnerabilities/xss_r/?name=afsdf#",
+        "request_header" : {"Accept-Language": "en-US,en;q=0.8", "Accept-Encoding": "identity", "Accept": "*/*", "User-Agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.85 Safari/537.36 Falcon/5.0.7.1",  "Referer": "http://paopaoquan.iqiyi.com/feed", "Cookie": "security=low; PHPSESSID=blc0i03qp82vabd2q65ilnj4d3", "Proxy-Connection": "keep-alive"},
         "request_content" : ''
     }
 
-    a = FuzzXSS(item)
-    a.runFuzz()
+    a = verify(item)
+    #a.runFuzz()
+    print a
 
 """
 # if not necessery, not use this rule,

@@ -1352,6 +1352,7 @@ class SQLInjectionTime(object):
 
 
 def verify(task):
+    print "====================\n now in awvs_time_sqli\n=================="
     message = {
         "method": "",
         "url" : "",
@@ -1371,9 +1372,9 @@ def verify(task):
         message['param'] = data
         save_to_databases(message)
         return (True, message)
-    
+
     return (False, {})
-    
+
 
 
 def main():

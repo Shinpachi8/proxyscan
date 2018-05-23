@@ -244,6 +244,7 @@ def parse_arachni_json(data):
 
 
 def verify(task):
+    print "===================\nNow in poc_arachni\n========================="
     arachniscan = ArachniScan(arachni_domain, arachni_headers)
     url = task["url"]
     try:
