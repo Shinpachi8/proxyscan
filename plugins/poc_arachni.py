@@ -16,6 +16,8 @@ class ArachniScan(object):
     def __init__(self, arachni_domain, headers):
         self.arachni_domain = arachni_domain
         self.headers = headers
+        self.arachni_headers = arachni_headers
+        self.options = ARACHNI_OPTIONS.copy()
 
     def do_scan(self, url, cookie=None, post_data=None):
         """
@@ -28,11 +30,11 @@ class ArachniScan(object):
         :rtype: scan id
         """
 
-        arachni_options["url"] = url
-        arachni_options["http"]["user_agent"] = self.headers["User-Agent"]
+        self.options["url"] = url
+        self.options["http"]["user_agent"] = self.headers["User-Agent"]
         if cookie is not None:
-            arachni_options["http"]["cookie_string"] = cookie
-            print "[do_scan] options.http.cookie_string= {}".format(arachni_options["http"]["cookie_string"])
+            self.options["http"]["cookie_string"] = cookie
+            print "[do_scan] options.http.cookie_string= {}".format(self.options["http"]["cookie_string"])
 
         if post_data:
             post_dict = {
@@ -45,7 +47,7 @@ class ArachniScan(object):
                 # if the post_data is json format, this will raise a exception
                 post_dict['inputs'].update(parse_qs(post_data))
                 yaml_string = yaml.safe_dump(post_dict, default_flow_style=False)
-                arachni_options.update({
+                self.options.update({
                     "plugins": {
                         "vector_feed": {
                             "yaml_string": yaml_string
@@ -53,16 +55,16 @@ class ArachniScan(object):
                     }
                 })
             except Exception as e:
-                arachni_options.update({
+                self.options.update({
                     "scope": {
-                        "page_limit": 1
+                        "page_limit": 3
                     }
                 })
             # pprint.pprint(options)
         else:
-            arachni_options.update({
+            self.options.update({
                 "scope": {
-                    "page_limit": 1
+                    "page_limit": 3
                 }
             })
 
@@ -70,12 +72,13 @@ class ArachniScan(object):
 
 
         loc = self.arachni_domain + "/scans"
-        options = json.dumps(arachni_options)
+        options = json.dumps(self.options)
         try:
             req = requests.post(loc, headers=self.headers, data=options)
             if req.status_code == 500:
                 # deal the situation that error happends
-                raise Exception
+                #raise Exception
+                return
             scanid = req.json()["id"]
             return scanid
         except Exception as e:
@@ -265,9 +268,13 @@ def verify(task):
 
 
 if __name__ == '__main__':
-    result = requests.get("http://127.0.0.1:7331//scans/f2bcdb1b6dca01db3e5c884be20f4e88/report.json", headers = arachni_headers)
+    #result = requests.get("http://127.0.0.1:7331//scans/f2bcdb1b6dca01db3e5c884be20f4e88/report.json", headers = arachni_headers)
 
-    x = parse_arachni_json(result.json())
-    print "================="
-    print x
-    save_to_databases(x, arachni=True)
+    #x = parse_arachni_json(result.json())
+    #print "================="
+    #print x
+    #save_to_databases(x, arachni=True)
+    task = {'method': 'GET',
+            'url': 'http://apisgame.iqiyi.com/datacache/tempdata/startgame/save?QC005=da23d481dd4fc8a3562226e8567e7ff0&spmid=&server_id=3006540&ad_ver=&uid=2387754763&area=1&fields=booked_status%2Cis_tourist&qipu_id=212782420&game_type=1&cf=&terminal=4&callback=o0o0oo0o&game_name=%25E5%2588%25BA%25E7%25A7%25A6%25E7%25A7%2598%25E5%258F%25B2&user_agent=chrome&authcookie=12O1k0RKm1xkCFZBvEpm2ANG6Lk8Dy7PWtGenXYCnN9PBerNLcAm3hoxcwb4DVM8E1Rzg22&server_order=40&game_id=6114&op_way=1',
+            'request_header': {'Cookie': 'anyway'}}
+    verify(task)

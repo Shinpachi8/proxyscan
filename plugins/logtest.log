@@ -1,0 +1,2 @@
+[2018-05-24 17:15:20,155] [poc_arachni.py] [104] [id_status] reason=JSONDecodeError('Expecting value: line 1 column 1 (char 0)',)
+[2018-05-24 17:15:20,155] [poc_arachni.py] [156] [scan] status=, busy=

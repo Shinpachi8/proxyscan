@@ -173,16 +173,19 @@ arachni_domain = "http://127.0.0.1:7331"
 arachni_headers =  {
         "User-Agent" : "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:57.0) Gecko/20100101 Firefox/57.0",
         "Authorization" : "Basic YXJhY2huaTEyMzphcmFjaG5pMTIz",
+        "Content-Type": 'application/json',
         "Connection" : "close"
     }
 
 
 arachni_timeout = 30 * 60
 
-arachni_options = {
+#arachni_options = {
+ARACHNI_OPTIONS = {
     "url" : "",
     "http" : {
-        "user_agent" : "Arachni/v2.0dev",
+        #"user_agent" : "Arachni/",
+        "user-agent" : "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:57.0) Gecko/20100101 Firefox/57.0 Security Scan",
         "request_timeout" : 3600,
         "request_redirect_limit" : 5,
         "request_concurrency" : 10,
