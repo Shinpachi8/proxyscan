@@ -72,12 +72,13 @@ class ArachniScan(object):
 
 
         loc = self.arachni_domain + "/scans"
-        options = json.dumps(self.options)
+        #options = json.dumps(self.options)
         try:
-            req = requests.post(loc, headers=self.headers, data=options)
+            req = requests.post(loc, headers=self.headers, json=self.options)
             if req.status_code == 500:
                 # deal the situation that error happends
                 #raise Exception
+                print req.content
                 return
             scanid = req.json()["id"]
             return scanid

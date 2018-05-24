@@ -173,7 +173,7 @@ def verify(task):
 if __name__ == '__main__':
     item = {
         "method" : "GET",
-        "url" : "http://apisgame.iqiyi.com/datacache/tempdata/startgame/save?QC005=da23d481dd4fc8a3562226e8567e7ff0&spmid=&server_id=3006540&ad_ver=&uid=2387754763&area=1&fields=booked_status%2Cis_tourist&qipu_id=212782420&game_type=1&cf=&terminal=4&callback=o0o0oo0o&game_name=%25E5%2588%25BA%25E7%25A7%25A6%25E7%25A7%2598%25E5%258F%25B2&user_agent=chrome&authcookie=12O1k0RKm1xkCFZBvEpm2ANG6Lk8Dy7PWtGenXYCnN9PBerNLcAm3hoxcwb4DVM8E1Rzg22&server_order=40&game_id=6114&op_way=1",
+        "url" : "http://www.iqiyi.com/v_19rrcce5oc.html?list=123",
         "request_header" : {"Accept-Language": "en-US,en;q=0.8", "Accept-Encoding": "identity", "Accept": "*/*", "User-Agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.85 Safari/537.36 Falcon/5.0.7.1",  "Referer": "http://paopaoquan.iqiyi.com/feed", "Cookie": "security=low; PHPSESSID=blc0i03qp82vabd2q65ilnj4d3", "Proxy-Connection": "keep-alive"},
         "request_content" : ''
     }
