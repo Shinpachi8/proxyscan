@@ -7,7 +7,9 @@ import time
 import json
 import yaml
 from urlparse import parse_qs
+from arachni.arachni_console import Arachni_Console
 
+'''
 class ArachniScan(object):
 
     """
@@ -174,6 +176,8 @@ class ArachniScan(object):
             result = ()
 
         return result
+'''
+
 
 
 
@@ -249,12 +253,15 @@ def parse_arachni_json(data):
 
 def verify(task):
     print "===================\nNow in poc_arachni\n========================="
-    arachniscan = ArachniScan(arachni_domain, arachni_headers)
+    # arachniscan = ArachniScan(arachni_domain, arachni_headers)
+    # arachniscan = Arachni_Console(url)
     url = task["url"]
     try:
         cookie = task["request_header"]["Cookie"]
     except:
-        cookie = None
+        cookie = ''
+
+    method = task['method']
 
     if task["method"] == "POST" and \
         "Content-Type" in task["request_header"] and \
@@ -263,7 +270,10 @@ def verify(task):
     else:
         post_data = None
 
-    result = arachniscan.scan(url, cookie=cookie, post_data=post_data)
+    # result = arachniscan.scan(url, cookie=cookie, post_data=post_data)
+    agent = task['request_header']['User-Agent']
+    scan = Arachni_Console(url, method=method, http_agent=agent,cookies=cookie, request_data=post_data)
+    result = parse_arachni_json(json.loads(scan.get_report()))
     save_to_databases(result, arachni=True)
     return (False, {})
 
@@ -277,5 +287,5 @@ if __name__ == '__main__':
     #save_to_databases(x, arachni=True)
     task = {'method': 'GET',
             'url': 'http://apisgame.iqiyi.com/datacache/tempdata/startgame/save?QC005=da23d481dd4fc8a3562226e8567e7ff0&spmid=&server_id=3006540&ad_ver=&uid=2387754763&area=1&fields=booked_status%2Cis_tourist&qipu_id=212782420&game_type=1&cf=&terminal=4&callback=o0o0oo0o&game_name=%25E5%2588%25BA%25E7%25A7%25A6%25E7%25A7%2598%25E5%258F%25B2&user_agent=chrome&authcookie=12O1k0RKm1xkCFZBvEpm2ANG6Lk8Dy7PWtGenXYCnN9PBerNLcAm3hoxcwb4DVM8E1Rzg22&server_order=40&game_id=6114&op_way=1',
-            'request_header': {'Cookie': 'anyway'}}
+            'request_header': {'Cookie': 'anyway=anyway', 'User-Agent': 'xlab'}}
     verify(task)

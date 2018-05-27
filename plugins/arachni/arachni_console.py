@@ -35,8 +35,8 @@ class Arachni_Console(object):
         self.audit = "--audit-links --audit-forms --audit-cookies"
         self.h_agent = "--http-user-agent='%s'" % (self.http_agent)
         self.h_cookies = "--http-cookie-string='%s'" % (self.cookies)
-        self.checks = "--checks=sql_injection,rfi,directory_listing"
-        # self.checks = "--checks=rfi,directory_listing,sql_injection,sql_injection_timing,sql_injection_differential,source_code_disclosure,file_inclusion"
+        # self.checks = "--checks=sql_injection,rfi,directory_listing"
+        self.checks = "--checks=rfi,directory_listing,http_put,xst,sql_injection,path_traversal,sql_injection_timing,sql_injection_differential,source_code_disclosure,file_inclusion,xss*,xxe,unvalidated_redirect"
         self.timeout = "--timeout=%s" % "2:30:00"
         self.arachni_client = ARACHNI_CLIENT
         self.arachni_reporter = ARACHNI_REPORTER
@@ -52,7 +52,7 @@ class Arachni_Console(object):
     # Start to Scan
     def _Scan(self):
         # subprocess command
-       if self.method=='POST':
+        if self.method=='POST':
             self.gen_yaml()
             self.cmd = [
                 self.arachni_client,
