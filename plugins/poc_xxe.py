@@ -50,7 +50,7 @@ def verify(task):
     if method == 'GET':
         query = hj.url.get_query
     else:
-        if is_json_data(hj.data):
+        if is_json(hj.data):
             query = urllib.urlencode(json.loads(hj.data))
         else:
             query = hj.data

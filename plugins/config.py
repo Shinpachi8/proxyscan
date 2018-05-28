@@ -8,6 +8,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 import sys
 import pymysql
+from lib.common import *
 
 
 reload(sys)
@@ -17,43 +18,34 @@ sys.setdefaultencoding("utf8")
 # referer:  http://www.jianshu.com/p/feb86c06c4f4
 # create logger
 logging.getLogger("requests").setLevel(logging.WARNING)
-logger = logging.getLogger("test")
-logger.setLevel(logging.INFO)
+# logger = logging.getLogger("test")
+# logger.setLevel(logging.INFO)
 
-# create handler
-filehandler = logging.FileHandler("logtest.log", mode="w", encoding="utf-8", delay=False)
-streamhandler = logging.StreamHandler()
+# # create handler
+# filehandler = logging.FileHandler("logtest.log", mode="w", encoding="utf-8", delay=False)
+# streamhandler = logging.StreamHandler()
 
-# create format
-formatter = logging.Formatter("[%(asctime)s] [%(filename)s] [%(lineno)d] %(message)s")
+# # create format
+# formatter = logging.Formatter("[%(asctime)s] [%(filename)s] [%(lineno)d] %(message)s")
 
-# add formatter to handler
-filehandler.setFormatter(formatter)
-streamhandler.setFormatter(formatter)
+# # add formatter to handler
+# filehandler.setFormatter(formatter)
+# streamhandler.setFormatter(formatter)
 
-# set hander to logger
-logger.addHandler(filehandler)
-logger.addHandler(streamhandler)
+# # set hander to logger
+# logger.addHandler(filehandler)
+# logger.addHandler(streamhandler)
 
-
-
-DSN = "mysql+pymysql://root:@127.0.0.1/wyproxy?charset=utf8"
-engine = create_engine(DSN, echo=True)
-metadata = MetaData(bind=engine)
-Base = declarative_base(metadata=metadata)
-
-Session = scoped_session(sessionmaker(bind=engine))
-
-
-class VULNS(Base):
-    __table__ = Table('vulns', metadata, autoload=True)
 
 
 def save_to_databases(data, arachni=False):
-    session = Session()
+
+    session = MySQLUtils()
     print "======================"
     print data
     print "====================="
+
+    insert_sql = "insert into vulns (url, method, parameters, headers_string, delta_time, vuln_name, severity, checks, proof, seed) values ('{url}', '{method}', '{parameters}', '{headers_string}', '{delta_time}', '{vuln_name}', '{severity}', '{checks}', '{proof}', '{seed}')"
     if arachni:
         #arachni result is [(),()]
         # print type(data)
@@ -61,8 +53,7 @@ def save_to_databases(data, arachni=False):
             for d in data:
                 print d
                 try:
-                    obj = VULNS(
-                        url = d[0],
+                    session.insert(insert_sql.format(url = d[0],
                         method = d[1],
                         parameters = d[2],
                         headers_string = d[3],
@@ -71,13 +62,10 @@ def save_to_databases(data, arachni=False):
                         severity = d[6],
                         checks = d[7],
                         proof = d[8],
-                        seed = d[9],
-                        )
-                    session.add(obj)
-                    session.commit()
+                        seed = d[9]))
                 except Exception as e:
                     logger.error("[save_to_database] [error={}]".format(repr(e)))
-                    session.rollback()
+                    # session.rollback()
         else:
             # logger.error(..)
             pass
@@ -86,18 +74,16 @@ def save_to_databases(data, arachni=False):
         method = data["method"]
         param = data["param"]
         vuln_name = data["type"]
-        obj = VULNS(
-            url = url,
-            method=method,
-            parameters = param,
-            vuln_name = vuln_name,
-        )
+        insert_sql2 = "insert into vulns(url, mehtod, parameters, vuln_name) values('{url}', '{method}', '{parameters}', '{vuln_name}')"
         try:
-            session.add(obj)
-            session.commit()
+            session.insert(insert_sql2.format(url = url,
+                        method=method,
+                        parameters = param,
+                        vuln_name = vuln_name,))
+
         except Exception as e:
             logger.error("[data_to_database] [arachni=False] [reason={}]".format(repr(e)))
-            session.rollback()
+
     session.close()
 
 

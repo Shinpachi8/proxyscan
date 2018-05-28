@@ -295,5 +295,5 @@ def run(url, method, data, headers, proxy_headers=None, responseTimes=None):
     except Exception, e:
         #print traceback.format_exc()
         pass
-print run('http://10.127.21.237/sqli-labs/Less-32/?id=1','GET','', {'cookie':'id=1;s=s;'})
-print run('http://10.127.21.237/sqli-labs/Less-33/?id=1','GET','', {'cookie':'id=1;s=s;'})
+# print run('http://127.0.0.1/sqli-labs/Less-32/?id=1','GET','', {'cookie':'id=1;s=s;'})
+# print run('http://127.0.0.1/sqli-labs/Less-33/?id=1','GET','', {'cookie':'id=1;s=s;'})

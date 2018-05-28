@@ -330,6 +330,7 @@ class BlueProxy(flow.FlowMaster):
                 data = self.data_queue.get()
                 data = json.dumps(data)
                 self.redis_conn.task_push(RedisConf.taskqueue, data)
+                print "RedisQueue Has {} items".format(self.redis_conn.task_count(RedisConf.taskqueue))
             except Exception as e:
                 print repr(e)
                 time.sleep(1)

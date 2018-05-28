@@ -40,8 +40,8 @@ BLACK_LIST_HOST += ['services.addons.mozilla.org', 'g-fox.cn', 'addons.firefox.c
 BLACK_LIST_HOST += ['versioncheck-bg.addons.mozilla.org', 'firefox.settings.services.mozilla.com']
 BLACK_LIST_HOST += ['blocklists.settings.services.mozilla.com', 'normandy.cdn.mozilla.net']
 BLACK_LIST_HOST += ['activity-stream-icons.services.mozilla.com', 'ocsp.digicert.com']
-BLACK_LIST_HOST += ['safebrowsing.clients.google.com', 'safebrowsing-cache.google.com', 'localhost']
-# BLACK_LIST_HOST += ['127.0.0.1']
+BLACK_LIST_HOST += ['safebrowsing.clients.google.com', 'safebrowsing-cache.google.com', ]
+# BLACK_LIST_HOST += ['127.0.0.1', 'localhost']
 
 class TURL(object):
     """docstring for TURL"""
@@ -173,7 +173,7 @@ class TURL(object):
 
 def LogUtil(path='/tmp/test.log', name='test'):
     logger = logging.getLogger()
-    logger.setLevel(logging.INFO)
+    logger.setLevel(logging.DEBUG)
 
     #create formatter
     formatter = logging.Formatter(fmt=u'[%(asctime)s] [%(levelname)s] [%(funcName)s] %(message)s ')
@@ -267,24 +267,24 @@ class THTTPJOB(object):
         """
         if self.block_static and self.url.is_ext_static():
             self.response = requests.Response()
-            return -1, {}, '', 0
+            return -1, {}, '', 1
         elif self.block_path and self.url.is_block_path():
+            self.response = requests.Response()            
 
-            self.response = requests.Response()
-            return -1, {}, '', 0
+            return -1, {}, '', 2
         elif self.url.get_host in BLACK_LIST_HOST:
             # print "found {} in black list host".format(self.url.get_host)
             self.response = requests.Response()
-            return -1, {}, '', 0
+            return -1, {}, '', 3
         elif self.ConnectionErrorCount >=3 :
-            return -1, {}, '', 0
+            return -1, {}, '', 4
 
         else:
             start_time = time.time()
             try:
                 if self.method == 'GET':
+                    print "##########"
                     self.url.get_dict_query = self.request_param_dict
-                    print "request url: {}".format(self.url.url_string())
                     self.response = requests.get(
                         self.url.url_string(),
                         headers = self.headers,
@@ -295,7 +295,9 @@ class THTTPJOB(object):
                     end_time = time.time()
                 else:
                     if not self.files:
+                        print "!!!!!!!!!"
                         self.data = self.request_param_dict
+                        print "self.data={}".format(self.data)
                         self.response = requests.post(
                             self.url.url_string(),
                             data = self.data,
@@ -305,7 +307,7 @@ class THTTPJOB(object):
                             timeout = self.timeout,
                             )
                     else:
-                        # print "------------------"
+                        print "------------------"
                         f = {'file' : (self.filename, self.data, self.filetype)}
                         self.response = requests.post(
                             self.url.url_string(),
@@ -462,7 +464,7 @@ class MySQLUtils():
     port = 3306
     username = 'root'
     password = ''
-    db = 'wyproxy'
+    db = 'vuln'
 
     def __init__(self):
         self.conn = pymysql.connect(host=MySQLUtils.host,
@@ -497,15 +499,6 @@ class MySQLUtils():
 def random_str(length=8):
     s = string.lowercase + string.uppercase + string.digits
     return "".join(random.sample(s, length))
-
-
-
-class RedisConf:
-    db = '0'
-    host = '127.0.0.1'
-    password = ''
-    port = 6379
-    taskqueue = 'queue:task'
 
 
 REDIS_DB = '0'
@@ -555,7 +548,7 @@ class RedisUtil(object):
         return self.conn.lpop(queue)
 
 
-    # @property
+    @property
     def task_count(self, queue):
         return self.conn.llen(queue)
 
