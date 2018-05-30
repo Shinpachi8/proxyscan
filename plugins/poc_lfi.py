@@ -66,7 +66,7 @@ def verify(task):
         if method == 'GET':
             query_string = hj.url.get_query
         else:
-            if is_json_data(data):
+            if is_json(data):
                 isjson = True
                 query_string = urllib.urlencode(json.loads(data))
             else:

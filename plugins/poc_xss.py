@@ -173,7 +173,7 @@ def verify(task):
 if __name__ == '__main__':
     item = {
         "method" : "GET",
-        "url" : "http://www.iqiyi.com/v_19rrcce5oc.html?list=123",
+        "url" : "http://passport.jd.com/user/petName/getUserInfoForMiniJd.action?callback=%26%22%5D%7Dalert%28%29%3B%7B%2F%2F&_=1527605483035",
         "request_header" : {"Accept-Language": "en-US,en;q=0.8", "Accept-Encoding": "identity", "Accept": "*/*", "User-Agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.85 Safari/537.36 Falcon/5.0.7.1",  "Referer": "http://paopaoquan.iqiyi.com/feed", "Cookie": "security=low; PHPSESSID=blc0i03qp82vabd2q65ilnj4d3", "Proxy-Connection": "keep-alive"},
         "request_content" : ''
     }

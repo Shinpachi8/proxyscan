@@ -258,8 +258,10 @@ class THTTPJOB(object):
             if self.is_json:
                 self.request_param_dict = json.loads(self.data)
             else:
-                self.request_param_dict = dict(urlparse.parse_qsl(self.data))
-
+                try:
+                    self.request_param_dict = dict(urlparse.parse_qsl(self.data))
+                except Exception as e:
+                    self.request_param_dict = {}
 
     def request(self):
         """
@@ -403,8 +405,10 @@ class Pollution(object):
         if self.isjson:
             query_dict = dict(urlparse.parse_qsl(self.query, keep_blank_values=True))
         else:
-            query_dict = dict(urlparse.parse_qsl(self.query, keep_blank_values=True))
-
+            try:
+                query_dict = dict(urlparse.parse_qsl(self.query, keep_blank_values=True))
+            except Exception as e:
+                return
         for key in query_dict.keys():
             for payload in self.payloads:
                 tmp_qs = query_dict.copy()

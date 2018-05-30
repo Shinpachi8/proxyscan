@@ -272,9 +272,12 @@ def verify(task):
 
     # result = arachniscan.scan(url, cookie=cookie, post_data=post_data)
     agent = task['request_header']['User-Agent']
-    scan = Arachni_Console(url, method=method, http_agent=agent,cookies=cookie, request_data=post_data)
-    result = parse_arachni_json(json.loads(scan.get_report()))
-    save_to_databases(result, arachni=True)
+    try:
+        scan = Arachni_Console(url, method=method, http_agent=agent,cookies=cookie, request_data=post_data)
+        result = parse_arachni_json(json.loads(scan.get_report()))
+        save_to_databases(result, arachni=True)
+    except Exception as e:
+        logger.error('Error For {}'.format(repr(e)))
     return (False, {})
 
 
