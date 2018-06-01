@@ -29,6 +29,7 @@ def verify(task):
                 'param': ''
             }
             save_to_database(message)
+            # logger.info('[found] {}'.format(message))
             return True, message
     except Exception as e:
         pass

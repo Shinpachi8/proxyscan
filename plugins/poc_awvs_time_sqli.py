@@ -1371,6 +1371,7 @@ def verify(task):
         message['url'] = url
         message['param'] = data
         save_to_databases(message)
+        # logger.info('[found] {}'.format(message))
         return (True, message)
 
     return (False, {})

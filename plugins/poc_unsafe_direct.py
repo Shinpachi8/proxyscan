@@ -103,6 +103,7 @@ def verify(task):
                         break
     if found:
         save_to_databases(message)
+        # logger.info('[found] {}'.format(message))
         return (True, message)
     else:
         return (False, {})

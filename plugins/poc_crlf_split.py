@@ -95,7 +95,9 @@ def verify(task):
                     break
     if found:
         print "[plugin.poc_crlf_split] found a bug"
+
         save_to_databases(message)
+        # logger.info('[found] {}'.format(message))
         return (True, message)
     else:
         return (False, {})

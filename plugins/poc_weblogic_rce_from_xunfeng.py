@@ -54,7 +54,7 @@ def verify(task):
                 "type" : "weblogic rce",
                 "info" : "[weblogic unseriable rce]",
             }
-
+            # logger.info('[found] {}'.format(ret))
             return (True, ret)
     except Exception as e:
         # print repr(e)

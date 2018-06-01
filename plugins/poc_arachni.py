@@ -275,6 +275,7 @@ def verify(task):
     try:
         scan = Arachni_Console(url, method=method, http_agent=agent,cookies=cookie, request_data=post_data)
         result = parse_arachni_json(json.loads(scan.get_report()))
+        # logger.info('[found] {}'.format(result))
         save_to_databases(result, arachni=True)
     except Exception as e:
         logger.error('Error For {}'.format(repr(e)))

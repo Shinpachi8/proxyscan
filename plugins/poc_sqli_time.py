@@ -3,6 +3,7 @@
 
 from sqli_time.sqli_time_injection import run
 from config import save_to_databases
+from lib.common import *
 
 
 def verify(task):
@@ -22,6 +23,7 @@ def verify(task):
         message['method'] = method
         message['url'] = result['target']
         save_to_databases(message)
+        logger.info('[found] {}'.format(message))
         return True, message
 
     return (False,{})   
