@@ -36,7 +36,7 @@ requests.packages.urllib3.disable_warnings()
 def verify(task):
     """
     this function aim to detect the strusts vulnerability and it's history
-    include 16,19,32,45 
+    include 16,19,32,45
     :param: task, the proxy parsed the request item
     {
         "method": "GET/POST",
@@ -108,9 +108,9 @@ def verify(task):
     except Exception as e:
         # print str(e)
         logger.error(repr(e))
-    
 
-    
+
+
     # 如果s02-45未发现问题，那么进行下边的Fuzz
     if not found:
         for param in payload:
@@ -122,21 +122,21 @@ def verify(task):
                     message["url"] = url
                     found = True
                     break
-                    
+
             except Exception as e:
                 logger.error(repr(e))
-    
+
     if found:
         save_to_databases(message)
         return (True, message)
     else:
         return (False, {})
 
-    
 
-        
-        
-                
+
+
+
+
 if __name__ == '__main__':
     item = {
         "url" : "",
@@ -144,7 +144,7 @@ if __name__ == '__main__':
         "request_header" : {},
         "request_content" :"",
     }
-    
+
     a = FuzzStruts2(item)
     a.runFuzz()
 

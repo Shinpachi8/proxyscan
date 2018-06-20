@@ -94,7 +94,7 @@ def verify(task):
                 status_code, headers, html, time_used = hj.request()
                 #print status_code, headers, html, time_used
                 if status_code == 200 and headers.get('Content-Type', '').split(';')[0] not in ["application/json", "text/plain", "application/javascript", "text/json", "text/javascript", "application/x-javascript"]:
-                    print 'yes'
+                    #print 'yes'
                     print hj.url
                     for rules in XSS_Rule[rule_key]:
                         if html.find(rules) >= 0:

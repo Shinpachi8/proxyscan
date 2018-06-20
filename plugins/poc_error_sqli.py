@@ -72,7 +72,7 @@ class classSQL(object):
                         self.to_check_list.append(temp_query)
 
 
-        print "self.to_check_list = {}".format(self.to_check_list)
+        #print "self.to_check_list = {}".format(self.to_check_list)
 
 
     def search_errormsg(self, response):

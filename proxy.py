@@ -60,7 +60,7 @@ class BlueProxy(flow.FlowMaster):
 
         threading.Thread(target=self.duplicate_thread).start()
         threading.Thread(target=self._print_msg).start()
-        threading.Thread(target=self.send2redis).start()
+        #threading.Thread(target=self.send2redis).start()
         #threading.Thread(target=self.save_cif_result).start()
 
         #插入URL到本地或远程任务队列中
@@ -102,6 +102,7 @@ class BlueProxy(flow.FlowMaster):
                     mysqldb_io = MysqlInterface()
                     mysqldb_io.insert_result(result)
                     #self.task_queue.put(result)
+                    self.send2redis(result)
                     self.url_count += 1
             except Exception, e:
                 time.sleep(1)
@@ -324,16 +325,16 @@ class BlueProxy(flow.FlowMaster):
         except Exception, e:
             print e
 
-    def send2redis(self):
-        while not self.STOP_ME:
-            try:
-                data = self.data_queue.get()
-                data = json.dumps(data)
-                self.redis_conn.task_push(RedisConf.taskqueue, data)
-                print "RedisQueue Has {} items".format(self.redis_conn.task_count(RedisConf.taskqueue))
-            except Exception as e:
-                print repr(e)
-                time.sleep(1)
+    def send2redis(self, data):
+        #while not self.STOP_ME:
+        try:
+            #data = self.data_queue.get()
+            data = json.dumps(data)
+            self.redis_conn.task_push(RedisConf.taskqueue, data)
+            print "RedisQueue Has {} items".format(self.redis_conn.task_count(RedisConf.taskqueue))
+        except Exception as e:
+            print repr(e)
+            time.sleep(1)
 
 
         # memory overfull bug

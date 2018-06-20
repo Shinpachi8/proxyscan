@@ -42,6 +42,7 @@ class Arachni_Console(object):
         self.arachni_reporter = ARACHNI_REPORTER
         self.is_timeout = False
         self.proc       = None
+        self.output-only-positives = '--output-only-positives'
         self.report_jsfile  = '/tmp/%s.json' % self.report
         self.request_data=request_data
         self.post_yamlfile  = '/tmp/'+url+hashlib.md5(self.start_time).hexdigest()+".yml"
@@ -63,11 +64,12 @@ class Arachni_Console(object):
                 self.post_pluginscan,
                 self.page_limit,
                 self.timeout,
+                self.output-only-positives,
                 self.report_file,
                 # self.dispatcher_url,
                 self.url
             ]
-         
+
         else:
             self.cmd = [
                 self.arachni_client,
@@ -77,6 +79,7 @@ class Arachni_Console(object):
                 self.checks,
                 self.page_limit,
                 self.timeout,
+                self.output-only-positives
                 self.report_file,
                 # self.dispatcher_url,
                 self.url
@@ -116,7 +119,7 @@ class Arachni_Console(object):
         aa=["\t"+i.replace("=",":") for i in self.request_data.split("\&")]
         fp.write(aa)
         fp.close()
-        
+
     def get_report(self):
         # arachni_reporter /tmp/test.afr --report=json:outfile=/tmp/test.json
         try:

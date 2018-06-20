@@ -3,16 +3,20 @@
 
 import threading
 import glob
+import hashlib
 import importlib
 import sys
 from plugins.lib.common import *
 
 
+def get_md5(string):
+    return hashlib.md5(string).hexdigest()[:16]
+
 def importpoc():
     plugins = glob.glob("plugins/poc*.py")
     plugins = [plugin[:-3] for plugin in plugins]
     pluginsfiles = [plugin.replace("/", ".") for plugin in plugins]
-    print pluginsfiles
+    #print pluginsfiles
     plugins = []
     for plugin in pluginsfiles:
         module = importlib.import_module(plugin)
@@ -20,7 +24,7 @@ def importpoc():
             plugins.append(getattr(module, "verify"))
         else:
             print 'Error'
-    print plugins
+    #print plugins
     # print dir(plugins[0])
     return plugins
 
@@ -31,7 +35,7 @@ def plugin_num():
 
 
 lock = threading.Lock()
-
+scaned_url = set()
 
 class Monitor(threading.Thread):
     plugins = []
@@ -52,14 +56,15 @@ class Monitor(threading.Thread):
             self.lock.acquire()
             if plugin_num() != len(Monitor.plugins):
                 Monitor.plugins = importpoc()
-                print "Monitor.plugisn.len={}".format((Monitor.plugins))
+               # print "Monitor.plugisn.len={}".format((Monitor.plugins))
             else:
-                print "Monitor.plugins = {} and plulgin_num={}".format(len(Monitor.plugins), plugin_num())
+                pass
+                #print "Monitor.plugins = {} and plulgin_num={}".format(len(Monitor.plugins), plugin_num())
             self.lock.release()
-            print Monitor.plugins
+            #print Monitor.plugins
             task = None
             self.lock.acquire()
-            
+
             task = self.conn.task_fetch(RedisConf.taskqueue)
             logger.info('[xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx]\ntask={}\nxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n'.format(task))
             self.lock.release()
@@ -67,6 +72,16 @@ class Monitor(threading.Thread):
             # logger.info('[Monitor] [Task={}]'.format(task))
             if task:
                 task = json.loads(task)
+                url = task['url']
+                url = TURL(url)
+
+                tmp = url.scheme + '://' + url.netloc + url.path + ''.join(url.get_dict_query.keys())
+                global scaned_url
+                tmp_md5 = get_md5(tmp)
+                if tmp_md5 in scaned_url:
+                    continue
+                else:
+                    scaned_url.add(tmp_md5)
                 logger.info('[Monitor] [Info] [URL={}]'.format(task['url']))
                 for p in Monitor.plugins:
                     (result, message) = p(task)
@@ -74,7 +89,8 @@ class Monitor(threading.Thread):
                         # save to mysql
                         logger.info("[found] Message={}".format(message))
             else:
-                sys.stdout.write('\r{}'.format("now, we have no task and sleep.."))
+                #sys.stdout.write('\r{}'.format("now, we have no task and sleep.."))
+                logger.info('no task, sleep....')
                 time.sleep(1)
 
 
@@ -82,7 +98,7 @@ class Monitor(threading.Thread):
 
 def start_point():
     threads = []
-    for i in xrange(1):
+    for i in xrange(3):
         t = Monitor(lock)
         t.setDaemon(True)
         threads.append(t)

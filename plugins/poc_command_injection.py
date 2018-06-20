@@ -14,7 +14,7 @@ from lib.common import *
 
 
 def verify(task):
-    print "===============\n now in ci\n=================="
+    #print "===============\n now in ci\n=================="
     """
     this function aim to detect command injection. for now, only detect the output and the dnslog,
     here we sleep(4) to wait the dnslog ,

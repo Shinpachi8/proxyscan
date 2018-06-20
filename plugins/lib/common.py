@@ -172,6 +172,7 @@ class TURL(object):
 
 
 def LogUtil(path='/tmp/test.log', name='test'):
+    logging.getLogger('requests').setLevel(logging.WARNING)
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
 
@@ -286,7 +287,7 @@ class THTTPJOB(object):
             try:
                 if self.method == 'GET':
                     self.url.get_dict_query = self.request_param_dict
-                    print "request url: {}".format(self.url.url_string())
+                    #print "request url: {}".format(self.url.url_string())
                     self.response = requests.get(
                         self.url.url_string(),
                         headers = self.headers,
@@ -320,7 +321,7 @@ class THTTPJOB(object):
                             )
                     end_time = time.time()
             except Exception as e:
-                print "[lib.common] [THTTPJOB.request] {}".format(repr(e))
+                #print "[lib.common] [THTTPJOB.request] {}".format(repr(e))
                 end_time = time.time()
                 self.ConnectionErrorCount += 1
                 return -1, {}, '', 0
@@ -347,7 +348,8 @@ def is_http(url, port=None):
         conn.close()
         service = 'http'
     except Exception as e:
-        print "[lib.common] [is_http] {}".format(repr(e))
+        #print "[lib.common] [is_http] {}".format(repr(e))
+        pass
 
     return service
 
@@ -365,7 +367,8 @@ def is_https(url, port=None):
         conn.close()
         service = 'https'
     except Exception as e:
-        print "[lib.common] [is_http] {}".format(repr(e))
+        #print "[lib.common] [is_http] {}".format(repr(e))
+        pass
 
     return service
 
@@ -574,6 +577,7 @@ class RedisUtil(object):
     #    self.conn.close()
 
 if __name__ == '__main__':
+    '''
     file = 'img.png'
     filetype='image/png'
     data="data"
@@ -592,3 +596,7 @@ if __name__ == '__main__':
     url = 'http://www.iqiyi.com/path/?p=v&p2=v2'
     query = 'p=v&p2=v2'
     print Pollution(query, xss).payload_generate()
+    '''
+    url = 'http://www.baidu.com/v1/?a=b&c=e'
+    url  = TURL(url)
+    print ''.join(url.get_dict_query.keys())

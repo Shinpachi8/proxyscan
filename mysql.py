@@ -4,10 +4,11 @@ from __future__ import absolute_import
 
 from config import mysqldb_conn
 
+import pymysql
 import pymysql.cursors
 import json
 import time
- 
+
 def timestamp_datetime(value):
     format = '%Y-%m-%d %H:%M:%S'
     value = time.localtime(value)
@@ -16,7 +17,7 @@ def timestamp_datetime(value):
 
 class MysqlInterface(object):
     """docstring for MysqlInterface"""
-    
+
     def __init__(self):
         self.connection = self.init()
 
@@ -40,13 +41,13 @@ class MysqlInterface(object):
                 `url`,
                 `status_code`,
                 `date_time`,
-                `host`, 
-                `path`, 
-                `method`, 
-                `request_content`, 
+                `host`,
+                `path`,
+                `method`,
+                `request_content`,
                 `request_header`
                 ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"""
-            
+
             extension = result.get('extension'),
             url = result.get('url'),
             status_code = result.get('status_code'),
@@ -55,7 +56,7 @@ class MysqlInterface(object):
             # content = result.get('content')
 
             host = result.get('host'),
-            
+
             path = result.get('path'),
             method = result.get('method'),
 
