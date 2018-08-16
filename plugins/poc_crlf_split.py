@@ -94,7 +94,7 @@ def verify(task):
                     message['param'] = hj.data if hj.method == 'GET' else hj.url.get_query
                     break
     if found:
-        print "[plugin.poc_crlf_split] found a bug"
+        #print "[plugin.poc_crlf_split] found a bug"
 
         save_to_databases(message)
         # logger.info('[found] {}'.format(message))

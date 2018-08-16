@@ -128,7 +128,7 @@ def verify(task):
 
     # # verify the log
     # time.sleep(5)
-    # dnsApi = "http://dnslog.niufuren.cc/api/dns/devil/{}/"
+    # dnsApi = "http://dnslog.yoyostay.top/api/dns/devil/{}/"
     # rep = requests.get(dnsApi.format(tag))
     # if "True" in rep.text:
     #     message["url"] = task["url"]

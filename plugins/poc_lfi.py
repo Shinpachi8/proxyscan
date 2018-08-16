@@ -219,4 +219,4 @@ if __name__ == '__main__':
     item['request_header']['Cookie'] = 'security=low; PHPSESSID=blc0i03qp82vabd2q65ilnj4d3'
 
     a = verify(item)
-    print a
+    #print a

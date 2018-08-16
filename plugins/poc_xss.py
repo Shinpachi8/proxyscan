@@ -51,7 +51,6 @@ def verify(task):
     # XSS里如果没有query字段，就在最后追加
     if url_parse.query == "" and method == 'GET':
         #pass
-        print 'fuck'
         return (False, {})
         # for key in XSS_Rule.keys():
         #     for payload in XSS_Rule[key]:
@@ -95,7 +94,6 @@ def verify(task):
                 #print status_code, headers, html, time_used
                 if status_code == 200 and headers.get('Content-Type', '').split(';')[0] not in ["application/json", "text/plain", "application/javascript", "text/json", "text/javascript", "application/x-javascript"]:
                     #print 'yes'
-                    print hj.url
                     for rules in XSS_Rule[rule_key]:
                         if html.find(rules) >= 0:
                             found = True
@@ -180,7 +178,6 @@ if __name__ == '__main__':
 
     a = verify(item)
     #a.runFuzz()
-    print a
 
 """
 # if not necessery, not use this rule,

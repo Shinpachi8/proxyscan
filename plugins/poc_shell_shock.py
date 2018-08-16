@@ -31,7 +31,7 @@ def verify(task):
         message['method'] = method
         message['param'] = payload
         save_to_databases(message)
-        # logger.info('[found] {}'.format(message))
+        #logger.info('[found] {}'.format(message))
         return True, message
 
     return (False, {})

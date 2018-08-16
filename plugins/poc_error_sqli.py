@@ -55,7 +55,7 @@ class classSQL(object):
             try:
                 values = dict(urlparse.parse_qsl(self.data))
             except Exception as e:
-                print repr(e)
+                #print repr(e)
                 try:
                     values = json.loads(self.data)
                     jsondata = True
@@ -209,8 +209,9 @@ class classSQL(object):
                     self.aim_error_list.append((self.method, self.url, url))
                     # to confirm the error like awvs
             except Exception as e:
-                print repr(e)
-        print self.aim_error_list
+                #print repr(e)
+                pass
+        #print self.aim_error_list
 
 
 def verify(task):
@@ -239,10 +240,11 @@ def verify(task):
             message['method'] = a.aim_error_list[0][0]
             message['url'] = a.aim_error_list[0][1]
             message['param'] = a.aim_error_list[0][2]
-            logging.info("5 [found SQLi no Confirm] {}".format(a.aim_error_list))
+            #logging.info("5 [found SQLi no Confirm] {}".format(a.aim_error_list))
 
         else:
-            logging.info( "5 [found SQLi no Confirm] {}".format(t))
+            #logging.info( "5 [found SQLi no Confirm] {}".format(t))
+            pass
         save_to_databases(message)
         return (True, message)
     else:

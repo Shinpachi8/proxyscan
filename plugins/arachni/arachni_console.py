@@ -42,7 +42,7 @@ class Arachni_Console(object):
         self.arachni_reporter = ARACHNI_REPORTER
         self.is_timeout = False
         self.proc       = None
-        self.output-only-positives = '--output-only-positives'
+        self.output_only_positives = '--output-only-positives'
         self.report_jsfile  = '/tmp/%s.json' % self.report
         self.request_data=request_data
         self.post_yamlfile  = '/tmp/'+url+hashlib.md5(self.start_time).hexdigest()+".yml"
@@ -64,7 +64,7 @@ class Arachni_Console(object):
                 self.post_pluginscan,
                 self.page_limit,
                 self.timeout,
-                self.output-only-positives,
+                self.output_only_positives,
                 self.report_file,
                 # self.dispatcher_url,
                 self.url
@@ -79,7 +79,7 @@ class Arachni_Console(object):
                 self.checks,
                 self.page_limit,
                 self.timeout,
-                self.output-only-positives
+                self.output_only_positives,
                 self.report_file,
                 # self.dispatcher_url,
                 self.url

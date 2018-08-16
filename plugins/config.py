@@ -53,16 +53,16 @@ def save_to_databases(data, arachni=False):
             for d in data:
                 print d
                 try:
-                    session.insert(insert_sql.format(url = d[0],
-                        method = d[1],
-                        parameters = d[2],
-                        headers_string = d[3],
-                        delta_time = d[4],
-                        vuln_name = d[5],
-                        severity = d[6],
-                        checks = d[7],
-                        proof = d[8],
-                        seed = d[9]))
+                    session.insert(insert_sql.format(url = pymysql.escape_string(d[0]),
+                        method = pymysql.escape_string(d[1]),
+                        parameters = pymysql.escape_string(d[2]),
+                        headers_string = pymysql.escape_string(d[3]),
+                        delta_time = pymysql.escape_string(d[4]),
+                        vuln_name = pymysql.escape_string(d[5]),
+                        severity = pymysql.escape_string(d[6]),
+                        checks = pymysql.escape_string(d[7]),
+                        proof = pymysql.escape_string(d[8]),
+                        seed = pymysql.escape_string(d[9])))
                 except Exception as e:
                     logger.error("[save_to_database] [error={}]".format(repr(e)))
                     # session.rollback()
@@ -76,10 +76,18 @@ def save_to_databases(data, arachni=False):
         vuln_name = data["type"]
         insert_sql2 = "insert into vulns(url, method, parameters, vuln_name) values('{url}', '{method}', '{parameters}', '{vuln_name}')"
         try:
-            session.insert(insert_sql2.format(url = url,
-                        method=method,
-                        parameters = param,
-                        vuln_name = vuln_name,))
+            print url
+            print method
+            print vuln_name
+            print param
+            param = '' if param is None else param
+            session.insert(insert_sql2.format(
+                            url = pymysql.escape_string(url),
+                            method = pymysql.escape_string(method),
+                            parameters = pymysql.escape_string(param),
+                            vuln_name = pymysql.escape_string(vuln_name)
+                            )
+                        )
 
         except Exception as e:
             logger.error("[data_to_database] [arachni=False] [reason={}]".format(repr(e)))
@@ -296,4 +304,5 @@ XXE_payload =  '<?xml version="1.0" ?> <!DOCTYPE r [ <!ELEMENT r ANY > <!ENTITY 
 
 if __name__ == '__main__':
     data = {'url':'http://test.iqiyi.com', 'method': 'GET', 'param': 'a=b', 'type':'test'}
-    save_to_databases(data)
+    Message={'url': u'https://search.jd.com/search?qrst=1&rt=1&enc=utf-8&keyword=%3Csvg+onload%3Dalert%281%29%3E&stop=1&vt=2&wq=%C3%A7%C2%8B%C2%97%C3%A4%C2%B8%C2%8D%C3%A7%C2%90%C2%86%C3%A5%C2%8C%C2%85%C3%A5%C2%AD%C2%90&bs=1&ev=exbrand_%C3%A7%C2%8B%C2%97%C3%A4%C2%B8%C2%8D%C3%A7%C2%90%C2%86%C3%AF%C2%BC%C2%88GBL%C3%AF%C2%BC%C2%89%5E1107_86494%5E&uc=0&stock=1', 'info': '[XSS]', 'type': 'XSS', 'method': u'GET', 'param': None}
+    save_to_databases(Message)

